@@ -73,10 +73,10 @@ $config = new XeroPHP\Config([
     ],
     // When the token is automatically refreshed, then this callback will
     // be given the opportunity to put it into storage.
-    'tokenRefreshCallback' => function($new, $old) use ($myStorageObject) {
+    'tokenRefreshCallback' => function($newConfig, $oldConfig) use ($myStorageObject) {
         // The new token and secret are available here:
-        $oauth_token = $new->oauth_token;
-        $oauth_token_secret = $new->oauth_token_secret;
+        $oauth_token = $newConfig->oauth_token;
+        $oauth_token_secret = $newConfig->oauth_token_secret;
 
         // Now those new crdentials need storing.
         $myStorageObject->storeTheNewTokenWhereever($oauth_token, $oauth_token_secret);
@@ -104,13 +104,13 @@ $refreshableClient = $api->createRefreshableClient($client);
 
 Now we have a client to send requests.
 
-After sending a request, you can check if the tokens were refreshed:
+After sending a request, you can check if the token was refreshed:
 
 ```php
 $tokensWereRefreshed = $refreshableClient->isTokenRefreshed();
 ```
 
-If the token is refreshed, then the new tokens will (hopefully) have been
+If the token is refreshed, then the new token will (hopefully) have been
 stored. The client then needs to be rebuilt as above.
 
 If you want to refresh the tokens explicitly, before you hit an expired
