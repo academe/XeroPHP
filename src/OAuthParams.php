@@ -40,9 +40,14 @@ class OAuthParams
 
     public function __get($name)
     {
-        if (array_key_exists($name, $this->params)) {
+        if ($this->__isset($name)) {
             return $this->params[$name];
         }
+    }
+
+    public function __isset($name)
+    {
+        return array_key_exists($name, $this->params);
     }
 
     public function getAll()

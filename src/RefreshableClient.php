@@ -92,6 +92,10 @@ class RefreshableClient
     public function getOAuthParams(Response $response)
     {
         // All OAuth responses from Xero have a content type of text/html.
+        // Maybe this will change one day, so keep an eye on this.
+        // "application/x-www-form-urlencoded" seems like it would be more appropriate,
+        // though that's usually for posting a request.
+
         if (substr($response->getHeaderLine('content-type'), 0, 9) === 'text/html') {
             $body = $response->getBody()->getContents();
             parse_str($body, $parts);
@@ -138,6 +142,12 @@ class RefreshableClient
             }
         }
 
+        // For testing the fresh token handling, a token refresh can be forced by setting
+        // this option.
+        if (! empty($options['forceTokenRefresh'])) {
+            $refreshRequired = true;
+        }
+
         if ($refreshRequired) {
             // The token has expired, so we should renew it.
             $this->refreshedToken = $this->refreshToken();
@@ -166,7 +176,7 @@ class RefreshableClient
             // A new config with the fresh tokens.
             // This will also signal any watchers on the config object so that the
             // new settings can be saved.
-            $config = $this->getConfig()->withFreshTokens($refresh_result);
+            $config = $this->getConfig()->withFreshTokens($this->refreshedToken);
 
             // A new API with the new config.
             $api = new API($config);
