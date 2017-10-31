@@ -13,7 +13,7 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
     /**
      * Original source data.
      */
-    protected $data;
+    protected $data = [];
 
     /**
      * The name of the element this data came from.
@@ -31,9 +31,9 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
     protected $items = [];
 
     /**
-     * True if the items are a numeric array of resources.
+     * True if the items are a numeric collection of resources.
      */
-    protected $isArray = false;
+    protected $isCollection = false;
 
     /**
      * Interator current pointer.
@@ -63,7 +63,7 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
         } else {
             // Numeric keys.
             // An array of resource objects.
-            $this->isArray = true;
+            $this->isCollection = true;
 
             foreach ($data as $key => $item) {
                 // The name will normally be the singular of the outer element name.
@@ -175,9 +175,12 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
         return $value;
     }
 
-    public function isArray()
+    /**
+     * @return bool true if this object is a collection of resources
+     */
+    public function isCollection()
     {
-        return $this->isArray;
+        return $this->isCollection;
     }
 
     /**
@@ -201,6 +204,14 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
     }
 
     /**
+     * @return bool true if this object was created with no data
+     */
+    public function isEmpty()
+    {
+        return count($this->data) > 0;
+    }
+
+    /**
      * For interface Iterator
      */
     public function rewind()
@@ -217,7 +228,7 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
         // otherwise return the complete items array as a single (and only)
         // element.
 
-        if ($this->isArray()) {
+        if ($this->isCollection()) {
             return $this->items[$this->iteratorPosition];
         } else {
             return $this->items;
@@ -245,7 +256,7 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
      */
     public function valid()
     {
-        if ($this->isArray()) {
+        if ($this->isCollection()) {
             return isset($this->items[$this->iteratorPosition]);
         } else {
             return ($this->iteratorPosition === 0);
@@ -257,10 +268,14 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
      */
     public function count()
     {
-        if ($this->isArray()) {
+        if ($this->isCollection()) {
+            // If this is a collection, then each item is a resource.
             return count($this->items);
         } else {
-            return 1;
+            // This object is a single resource if any items are set,
+            // each item being a resource property, or is empty if no
+            // items are set.
+            return count($this->items) ? 1 : 0;
         }
     }
 

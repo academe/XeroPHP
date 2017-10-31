@@ -136,10 +136,10 @@ The `ResponseData` class is instantiated with the response data converted to an 
 $response = $refreshableClient->get('payruns', ['query' => ['page' => 1]]);
 
 // Assuming all is fine, parse the response to an array.
-$array = API::parseResponse($response);
+$array = XeroPHP\API::parseResponse($response);
 
 // Instantiate the response data object.
-$result = new ResponseData($array)
+$result = new XeroPHP\ResponseData($array)
 
 // Now we can navigate the data.
 echo $result->id;
@@ -199,3 +199,9 @@ A decorator class could easily do this though, and that may make a nice addition
 the logic of "fetching all the matching things" that span more than one page away from
 the application.
 
+All other datatypes will be either a scalar the API supplied (string, float, int, boolean)
+or another `ResponseData` object containing either a single resource (e.g. "pagination")
+or a collection of resources (e.g. "payruns").
+
+Accessing properties of this object is case-insensitive.
+Accessing a non-existant property will return an empty `ResponseData`.
