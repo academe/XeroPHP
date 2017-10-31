@@ -47,3 +47,24 @@ The Results Object
 The results object provides access structured data of resources fetched from the API.
 It is a value object, and does not provide any ORM-like functionality.
 
+Each `ResponseData` object can act as a single resource or an ittterable collection of
+resources.
+
+An attempt is made to convert all dates and times to a `Carbon` datetime.
+Xero mixes quite a number of date formats across its APIs, so it is helpful to
+get them all normallised.
+Formats I've found so far:
+
+* "/Date(1509454062181)/" - milliseconds since the Unix epoch, UTC.
+* "/Date(1439813704613+0000)/" - milliseconds since the Unix epoch, with a timezone offset.
+* "2017-10-20T16:04:50" - ISO UTC time, to the second.
+* "2017-10-31T12:50:15.9920037" - ISO UTC timestamp with microseconds.
+* "2017-09-25T00:00:00" - ISO UTC date only.
+
+I'm sure there will be more. These fields are recognised solely through the suffix to
+their name at present. Suffixes recognised are:
+
+* UTC
+* Date
+* DateTime
+

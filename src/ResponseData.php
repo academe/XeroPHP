@@ -116,13 +116,20 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
             return Carbon::createFromTimestamp($milli / 1000);
         }
 
+        // One last, clumsy check of the format before we try to convert it.
+        // We just look for the "-99T99:" second that is in the middle of all
+        // date formats we have encountered so far.
+        if (!preg_match('/\-[0-9]{2,2}T[0-9]{2,2}:/', $value)) {
+            return $value;
+        }
+
         // This will work for most ISO datetime formats.
         return Carbon::parse($value);
     }
 
     public function toDate($value)
     {
-        return $this->toDatTime($value);
+        return $this->toDateTime($value);
     }
 
     /**
