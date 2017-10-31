@@ -35,14 +35,53 @@ and focus on just getting that one job done.
 Areas to Complete (TODO)
 ------------------------
 
-So far development of this package has concentrated on reading from the Xero API.
+* So far development of this package has concentrated on reading from the Xero API.
 Writing to the API should be supported, but has not gone through any testing
 at this stage.
-
-Tests. Any help is setting some up would be great.
+* Lots more documentation and examples.
+* Tests. Any help is setting some up would be great.
 
 The Results Object
 ------------------
+
+The `ResponseData` class is instantiated with the response data converted to an array:
+
+```php
+// Get the first page of payruns.
+$response = $client->get('payruns', ['query' => ['page' => 1]]);
+
+// Assuming all is fine, parse the response to an array.
+$array = API::parseResponse($response);
+
+// Instantiate the response data object.
+$result = new ResponseData($array)
+
+// Now we can navigate the data.
+echo $result->id;
+// 14c9fc04-f825-4163-a0cf-3c2bc31c989d
+
+foreach($result->PayRuns as $payrun) {
+    echo $payrun->periodStartDate;
+}
+// e4df31c9-07db-47d5-a415-6ee32d9048eb at 2017-09-25 00:00:00
+// fbd6fc76-dbfc-459d-b230-80334d175048 at 2017-10-20 00:00:00
+// 46200d03-67f2-4f5d-8852-cdad50cbe886 at 2017-10-25 00:00:00
+
+echo $result->pagination->pagesize;
+// 100
+
+var_dump($result->pagination->toArray());
+// array(4) {
+//   ["page"]=>
+//   int(1)
+//   ["pageSize"]=>
+//   int(100)
+//   ["pageCount"]=>
+//   int(1)
+//   ["itemCount"]=>
+//   int(3)
+// }
+```
 
 The results object provides access structured data of resources fetched from the API.
 It is a value object, and does not provide any ORM-like functionality.

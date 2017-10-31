@@ -2,7 +2,7 @@
     "name": "academe/xero-php",
     "type": "library",
     "description": "A client implementation of the Xero API, supplying raw data.",
-    "homepage": "https://github.com/academe/xero-php",
+    "homepage": "https://github.com/academe/XeroPHP",
     "license": "MIT",
 
     "require": {

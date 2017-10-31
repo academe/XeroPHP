@@ -105,7 +105,7 @@ class API
     /**
      * Parse a response body into an array.
      */
-    public function parseResponse($response)
+    public static function parseResponse($response)
     {
         // Strip off the character encoding, e.g. "application/json; charset=utf-8"
         list($contentType) = explode(';', $response->getHeaderLine('content-type'));
