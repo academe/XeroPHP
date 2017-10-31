@@ -204,4 +204,13 @@ or another `ResponseData` object containing either a single resource (e.g. "pagi
 or a collection of resources (e.g. "payruns").
 
 Accessing properties of this object is case-insensitive.
-Accessing a non-existant property will return an empty `ResponseData`.
+Accessing a non-existant property will return an empty `ResponseData`:
+
+```php
+$value = $result->foo->bar->where->am_i;
+var_dump($value->isEmpty());
+// bool(true)
+```
+
+But do be aware that when you hit a scalar (e.g. a string) then that is what you will get
+back and not a `ResponseData` object.

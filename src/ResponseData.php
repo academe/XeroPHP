@@ -208,7 +208,7 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
      */
     public function isEmpty()
     {
-        return count($this->data) > 0;
+        return empty($this->data);
     }
 
     /**
