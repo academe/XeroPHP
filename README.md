@@ -41,6 +41,91 @@ at this stage.
 * Lots more documentation and examples.
 * Tests. Any help is setting some up would be great.
 
+Quick Start
+-----------
+
+```php
+use use Academe\XeroPHP;
+
+// Most of the confifuration goes into one place.
+$config = new XeroPHP\Config([
+    // Account credentials.
+    'consumerKey'    => 'your-consumer-key',
+    'consumerSecret' => 'your-consumer-sectet',
+    // Current token and secret from storage.
+    'oauthToken'           => $oauth_token,
+    'oauthTokenSecret'    => $oauth_token_secret,
+    // Curresnt session for refreshes also from storage.
+    'oauthSessionHandle'   => $oauth_session_handle,
+    // Running the Partner Application
+    'oauth1Additional' => [
+        'signature_method' => \GuzzleHttp\Subscriber\Oauth\Oauth1::SIGNATURE_METHOD_RSA,
+        'private_key_file' => 'local/path/to/private.pem',
+        'private_key_passphrase' => 'your-optional-passphrase',
+    ],
+    'api' => 'api.xro', // 'payroll.xro' etc.
+    'version' => '2.0', // '1.0' for AU and US Payroll
+    'clientAdditional' => [
+        'headers' => [
+            // We would like JSON back for most APIs, as it is structured nicely.
+            'Accept' => 'application/json',
+        ],
+    ],
+    // When the token is automatically refreshed, then this callback will
+    // be given the opportunity to put it into storage.
+    'tokenRefreshCallback' => function($new, $old) use ($myStorageObject) {
+        // The new token and secret are available here:
+        $oauth_token = $new->oauth_token;
+        $oauth_token_secret = $new->oauth_token_secret;
+
+        // Now those new crdentials need storing.
+        $myStorageObject->storeTheNewTokenWhereever($oauth_token, $oauth_token_secret);
+    }
+]);
+
+// The API object will help us coordinate setting up the client.
+$api = new XeroPHP\API($config);
+
+// The OAuth1 handler signs the requests.
+$oauth1 = $api->createOAuth1Handler();
+
+// The handler stack is used to push the OAuth1 handler into Guzzle.
+$stack = $api->createStack($oauth1);
+
+// Get a plain Guzzle client, with appropriate settings.
+$client = $api->createClient(['handler' => $stack]);
+
+// Create the auto-token refreshing client.
+// Use it like a Guzzle client to send requests.
+// Pass the resource path in as the URI, as the base URL is already
+// configured.
+$refreshableClient = $api->createRefreshableClient($client);
+```
+
+Now we have a client to send requests.
+
+After sending a request, you can check if the tokens were refreshed:
+
+```php
+$tokensWereRefreshed = $refreshableClient->isTokenRefreshed();
+```
+
+If the token is refreshed, then the new tokens will (hopefully) have been
+stored. The client then needs to be rebuilt as above.
+
+If you want to refresh the tokens explicitly, before you hit an expired
+token response, then it can be done like this:
+
+```php
+$newTokenDetails = $refreshableClient->refreshToken();
+```
+
+You then have to store $newTokenDetails (a value object - just pull out what
+you need or store the whole thing) and rebuild the client.
+That may be more convenient to do, but be aware that unless you set a guard time,
+there may be times when you miss an expiry and the request will return an expired
+token error.
+
 The Results Object
 ------------------
 
@@ -48,7 +133,7 @@ The `ResponseData` class is instantiated with the response data converted to an 
 
 ```php
 // Get the first page of payruns.
-$response = $client->get('payruns', ['query' => ['page' => 1]]);
+$response = $refreshableClient->get('payruns', ['query' => ['page' => 1]]);
 
 // Assuming all is fine, parse the response to an array.
 $array = API::parseResponse($response);
@@ -61,7 +146,7 @@ echo $result->id;
 // 14c9fc04-f825-4163-a0cf-3c2bc31c989d
 
 foreach($result->PayRuns as $payrun) {
-    echo $payrun->periodStartDate;
+    echo $payrun->id . " at " . $payrun->periodStartDate . "\n";
 }
 // e4df31c9-07db-47d5-a415-6ee32d9048eb at 2017-09-25 00:00:00
 // fbd6fc76-dbfc-459d-b230-80334d175048 at 2017-10-20 00:00:00
@@ -86,8 +171,9 @@ var_dump($result->pagination->toArray());
 The results object provides access structured data of resources fetched from the API.
 It is a value object, and does not provide any ORM-like functionality.
 
-Each `ResponseData` object can act as a single resource or an ittterable collection of
-resources.
+Each `ResponseData` object can act as a single resource or an itterable collection of
+resources. The collection fucntionality is particularly fancy, but it has `first()`
+and `count()`, and will iterate over a `foreach` loop.
 
 An attempt is made to convert all dates and times to a `Carbon` datetime.
 Xero mixes quite a number of date formats across its APIs, so it is helpful to
@@ -106,4 +192,10 @@ their name at present. Suffixes recognised are:
 * UTC
 * Date
 * DateTime
+
+There is no automatic pagination feature (automatically fetching subsequent pages) when
+iterating over a paginated resource.
+A decorator class could easily do this though, and that may make a nice addition to take
+the logic of "fetching all the matching things" that span more than one page away from
+the application.
 
