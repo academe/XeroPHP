@@ -213,4 +213,10 @@ var_dump($value->isEmpty());
 ```
 
 But do be aware that when you hit a scalar (e.g. a string) then that is what you will get
-back and not a `ResponseData` object.
+back and not a `ResponseData` object. In addition, some scalars are returned from the API
+as a null, such as the `pagination` field when fetching a single `payrun`, or the `problem`
+field when there is no problem.
+Some helper functions to look at the content within these common fields, with validation
+for when it is an explicit `null` rather than just *not set*, would be useful.
+There may be an argument for treating `null` nodes the same way as missing nodes, replacing
+it with an empty `ResponseData`.
