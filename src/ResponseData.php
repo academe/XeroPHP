@@ -40,13 +40,22 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
      */
     protected $iteratorPosition = 0;
 
+    /**
+     * The parent data onject.
+     */
+    protected $parent;
+
     // Can be support other kinds of iterables?
-    public function __construct(array $data = [], $name = null)
+    public function __construct(array $data = [], $name = null, self $parent = null)
     {
         $this->data = $data;
 
         if ($name !== null) {
             $this->name = $name;
+        }
+
+        if ($parent !== null) {
+            $this->parent = $parent;
         }
 
         // Is this a numeric array or associative?
@@ -60,7 +69,7 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
 
                 $this->items[$name] = $this->parseItem($item, $name);
             }
-        } else {
+        } elseif (! empty($data)) {
             // Numeric keys.
             // An array of resource objects.
             $this->isCollection = true;
@@ -75,27 +84,32 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
         }
     }
 
-    protected function parseItem($item, $name = null)
+    /**
+     * Parse the value of a resource field, if necessary.
+     * Dates will be converted to Carbon, arrays to a child collection,
+     * and everything else will be left as supplied.
+     */
+    protected function parseItem($value, $name = null)
     {
-        if (is_array($item)) {
-            return new static($item, $name);
+        if (is_array($value)) {
+            return new static($value, $name);
         }
 
         $lcName = strtolower($name);
 
         if (substr($lcName, -3) === 'utc') {
-            return $this->toDateTime($item);
+            return $this->toDateTime($value);
         }
 
         if (substr($lcName, -8) === 'datetime') {
-            return $this->toDateTime($item);
+            return $this->toDateTime($value);
         }
 
         if (substr($lcName, -4) === 'date') {
-            return $this->toDate($item);
+            return $this->toDate($value);
         }
 
-        return $item;
+        return $value;
     }
 
     /**
@@ -129,6 +143,8 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
 
     public function toDate($value)
     {
+        // For now, return a DateTime Carbon object.
+        // The time will be set to 00:00:00
         return $this->toDateTime($value);
     }
 
@@ -154,23 +170,20 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
             return $this->data[substr($name, 0, -4)];
         }
 
+        // The property is not set at all. Return an empty object
+        // instead.
         if (! isset($this->index[$lcName])) {
-            return new static;
+            return new static([], $name, $this);
         }
 
         $value = $this->items[$this->index[$lcName]];
 
-        // TODO: convert all timestamps to Carbon objects.
-        // Field names will end in "UTC" for timestamps, or "Date" for dates (with no
-        // time), or "DateTime" for other non-timestamp dates and times.
-        // Some UTC fields end with "DateUTC" and some with "DateTimeUTC", but both
-        // types have a time component.
-        // Formats include: /Date(1439813704613+0000)/ and "2017-09-25T00:00:00"
-        // for plain dates, or "2010-09-17T19:26:39.157" for timestamps in the
-        // newer APIs, or "2017-06-27T07:28:20" to less accuracy in some places.
-        // Some timestamps go to a lot more accuracy: "2017-09-13T06:21:31.4746406"
-        // 
-        // Oh, it's a real mess :-/
+        // If the API has returned an explicit null for a field, then return
+        // an empty data object instead, so we can navigate through it without
+        // raising an exception.
+        if ($value === null) {
+            return new static([], $name, $this);
+        }
 
         return $value;
     }
@@ -209,6 +222,14 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
     public function isEmpty()
     {
         return empty($this->data);
+    }
+
+    /**
+     * @return self|null The parent object, if not the root data object.
+     */
+    public function getParent()
+    {
+        return $this->parent;
     }
 
     /**
