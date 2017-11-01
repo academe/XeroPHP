@@ -308,4 +308,16 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
         $this->rewind();
         return $this->current();
     }
+
+    /**
+     * Convert an "empty" object to an empty string.
+     */
+    public function __tostring()
+    {
+        if ($this->isEmpty()) {
+            return '';
+        } else {
+            throw \Exception('Cannot convert object to string');
+        }
+    }
 }

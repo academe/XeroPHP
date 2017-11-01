@@ -221,3 +221,53 @@ field when there is no problem.
 In this case, when you fetch the value, you will be given an empty `ResponseData` object
 instead.
 
+Guzzle Exceptions
+-----------------
+
+By default, the Guzzle client will throw an exception if it receives a non 20x HTTP response.
+When this happens, the HTTP response can be found in the exception.
+
+```php
+try {
+    $response = $client->get('PayRuns', []);
+} catch (\Exception $e) {
+    $response = $e->getResponse();
+    ...
+}
+```
+
+Handling non-20x messages like this may not be convenient, so Guzzle can be told not to
+throw an exception using the `exceptions` option:
+
+```php
+$response = $client->get('PayRuns', ['exceptions' => false]);
+```
+
+This option can be used on each request, or set as the default in the `Config` instantiation.
+This package is designed not to care which approach you take. However, *not* throwing an
+exception often makes sense, because even non-20x responses nearly always contain a response
+body with information the application is going to need to log or to make a decision.
+
+Catching Errors
+---------------
+
+There are numerous sources of error, and these are reported in many different ways, and with
+different data structures. The aim of this package will be to try to normalise them, but
+in the meantime here is a list of those we know:
+
+* OAuth errors
+* Request construction errors, such as an invalid UUID format
+* Invalid resource errors, such as a missing resource or incorrect URL
+
+The places where error details cna be found are:
+
+* OAuth errors will be returned as URL-encoded parameters in the response body.
+  The `OAuthParams` class can parse these details and provide some interpretation.
+* Request construction errors are returned TBC
+
+Other Notes
+-----------
+
+I have noticed the occassional 401 which then works on a retry. Using the Guzzle retry
+handler would be a good move to avoid unnecessary errors when processing large amounts
+of data.
