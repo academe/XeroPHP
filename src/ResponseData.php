@@ -149,7 +149,7 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
     }
 
     /**
-     * For intergace \JsonSerializable
+     * For interface \JsonSerializable
      */
     public function jsonSerialize()
     {
