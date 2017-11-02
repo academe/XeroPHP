@@ -47,7 +47,8 @@ Quick Start
 ```php
 use use Academe\XeroPHP;
 
-// Most of the confifuration goes into one place.
+// Most of the configuration goes into one place.
+
 $config = new XeroPHP\Config([
     // Account credentials.
     'consumerKey'    => 'your-consumer-key',
@@ -82,6 +83,10 @@ $config = new XeroPHP\Config([
         $myStorageObject->storeTheNewTokenWhereever($oauth_token, $oauth_token_secret);
     }
 ]);
+
+// The `Config` class will accept `camelCase` or `snake_case` parameters, since
+// OAuth returns strictly snake_case, so can be fed directly into the `Config`.
+
 
 // The API object will help us coordinate setting up the client.
 $api = new XeroPHP\API($config);
