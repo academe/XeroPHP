@@ -22,6 +22,9 @@ class API
     }
 
     /**
+     * TODO: we should pass the base endpoint into the Config
+     * rathe than all tbe constituent parts.
+     *
      * @return Endpoint Get the resource endpoint.
      */
     public function getURL($resource = null)

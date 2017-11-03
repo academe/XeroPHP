@@ -13,6 +13,11 @@ use XeroPHP\Application;
 class Endpoint //implements UriInterface
 {
     /**
+     * The default base URL.
+     */
+    const BASE_URL = 'https://api.xero.com';
+
+    /**
      * Base API values.
      */
     const API_CORE      = 'api.xro';
@@ -27,6 +32,12 @@ class Endpoint //implements UriInterface
     const API_OAUTH     = 'oauth';
 
     /**
+     * API versions.
+     */
+    const VERSION_10 = '1.0';
+    const VERSION_20 = '2.0';
+
+    /**
      * Resources for OAuth requests.
      */
     const OAUTH_REQUEST_TOKEN = 'RequestToken';
@@ -35,33 +46,43 @@ class Endpoint //implements UriInterface
     /**
      * @var string
      */
-    private $baseUrl;
-    private $api;
-    private $version = '1.0';
+    private $baseUrl = self::BASE_URL;
+    private $api = self::API_CORE;
+    private $version = self::VERSION_20;
     private $resource;
 
     /**
      * URL in form $baseURL/$api/$version/$resource
-     *
-     * I'm not actually sure about the naming here, especially wrt "enpoint".
      *
      * @param Config $config
      * @param $resource
      * @param null $api
      * @throws Exception
      */
-    public function __construct($baseUrl, $api, $resource = null, $version = null)
+    public function __construct($baseUrl = null, $api = null, $resource = null, $version = null)
     {
-        $this->baseUrl = $baseUrl;
-        $this->api = $api;
+        if ($baseUrl) {
+            $this->baseUrl = $baseUrl;
+        }
+
+        if ($api) {
+            $this->api = $api;
+        }
+
+        if ($resource) {
+            $this->resource = $resource;
+        }
 
         if ($version !== null) {
             $this->version = $version;
         }
-
-        $this->resource = $resource;
     }
 
+    /**
+     * For switching to a new resource.
+     *
+     * @parame string $resource The resource endpoint, including resource ID if needed
+     */
     public function withResource($resource)
     {
         $clone = clone $this;
@@ -70,14 +91,29 @@ class Endpoint //implements UriInterface
     }
 
     /**
+     * For switching to a new API, for example from a resource URL
+     * to an OAuth URL.
+     *
+     * @parame string $api One of self::API_*
+     */
+    public function withApi($api)
+    {
+        $clone = clone $this;
+        $clone->api = $api;
+        return $clone;
+    }
+
+    /**
+     * @param string $resource The default resource can be overridden.
      * @return string
      */
-    public function getURL()
+    public function getURL($resource = null)
     {
+        // Include the API version only for the non-OAuth API.
         if ($this->api === static::API_OAUTH) {
-            $path = sprintf('%s/%s', $this->api, $this->resource);
+            $path = sprintf('%s/%s', $this->api, $resource ?: $this->resource);
         } else {
-            $path = sprintf('%s/%s/%s', $this->api, $this->version, $this->resource);
+            $path = sprintf('%s/%s/%s', $this->api, $this->version, $resource ?: $this->resource);
         }
 
         return sprintf('%s/%s', $this->baseUrl, $path);

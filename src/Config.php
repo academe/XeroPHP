@@ -45,6 +45,7 @@ class Config
     protected $clientAdditional = [];
 
     // The API, version of the API, and base URL.
+    // FIXME: I think we just need the base Endpoint.
     protected $baseUrl = 'https://api.xero.com';
     protected $api = 'api.xro';
     protected $version = '2.0';
