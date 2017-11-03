@@ -44,20 +44,30 @@ class Endpoint //implements UriInterface
     const OAUTH_ACCESS_TOKEN  = 'AccessToken';
 
     /**
+     * Other resources: Accountancy API.
+     */
+    const RESOURCE_ORGANISATION = 'Organisation';
+
+    /**
+     * Other resources: Payroll UK API.
+     */
+    const RESOURCE_UK_PAYRUN = 'payruns';
+
+    /**
      * @var string
      */
-    private $baseUrl = self::BASE_URL;
-    private $api = self::API_CORE;
-    private $version = self::VERSION_20;
+    private $baseUrl    = self::BASE_URL;
+    private $api        = self::API_CORE;
+    private $version    = self::VERSION_20;
     private $resource;
 
     /**
-     * URL in form $baseURL/$api/$version/$resource
+     * URL in form $baseURL/$api/[$version/[$resource]]
      *
-     * @param Config $config
-     * @param $resource
-     * @param null $api
-     * @throws Exception
+     * @param string|null $baseUrl
+     * @param string|null $api
+     * @param string|null $resource
+     * @param string|null $version
      */
     public function __construct($baseUrl = null, $api = null, $resource = null, $version = null)
     {
@@ -100,6 +110,18 @@ class Endpoint //implements UriInterface
     {
         $clone = clone $this;
         $clone->api = $api;
+        return $clone;
+    }
+
+    /**
+     * For switching to a new API version.
+     *
+     * @parame string $api One of self::VERSION_*
+     */
+    public function withVersion($version)
+    {
+        $clone = clone $this;
+        $clone->version = $version;
         return $clone;
     }
 
