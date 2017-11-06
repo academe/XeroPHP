@@ -5,6 +5,29 @@ namespace Academe\XeroPHP;
 /**
  * Simple value object for the OAuth response parameters.
  * A little more intelligent than an array.
+ *
+ * FIXME: a bit of a confusing mess. OAuth returns unix timestamps and periods
+ * in seconds, while storage generally holds full dates in object or string format.
+ * Is this doing too much? Do we need one class for parsing OAuth response, and a
+ * separate class for handling persisted OAuth data and timeouts? This may make
+ * more sense, as one inteprets data provied wrt the current local time and
+ * time periods, and the other looks at saved times, which may be relative or
+ * absolute, with or without periods. Only the first cares about the tokens, and
+ * only the second cares about the expiry status.
+ * The first also may get a parameter inidcating the token has expired, while the
+ * second only looks at times to determine if the token gas expired.
+ *
+ * OAuth registration and renewal will give us:
+ * - oauth_expires_in - expiry time in seconds for a token from its creation
+ * The oauth_expires_in is no use without knowing the creation time.
+ * The creation time is only really known at the moment the token is created or
+ * refreshed. So this is where an oauth_expires_at value can be calculated.
+ * Once calculated, it can be returned as a Carbon/DateTime object, and set (by
+ * retrieval as a unix timestamp (integer), a Carbon/DateTime object or a parsable
+ * string.
+ * We should probably have an oauth_created_at which operates in a similat way.
+ * When ititialising, we only create an oauth_created_at in the object if one was
+ * not supplied in the setup data.
  */
 
 class OAuthParams implements \JsonSerializable

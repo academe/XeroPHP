@@ -40,6 +40,7 @@ Writing to the API should be supported, but has not gone through any testing
 at this stage.
 * Lots more documentation and examples.
 * Tests. Any help is setting some up would be great.
+* Docs on the Expiry class, which splits OAuthParams into two separate classes.
 
 Quick Start
 -----------
