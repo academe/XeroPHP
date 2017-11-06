@@ -44,11 +44,8 @@ class Config
     // Additional Client parameters.
     protected $clientAdditional = [];
 
-    // The API, version of the API, and base URL.
-    // FIXME: I think we just need the base Endpoint.
-    protected $baseUrl = 'https://api.xero.com';
-    protected $api = 'api.xro';
-    protected $version = '2.0';
+    // The base endpoint used to build other endpoints from.
+    protected $endpoint;
 
     // Callable.
     protected $tokenRefreshCallback;
@@ -56,33 +53,72 @@ class Config
     public function __construct(array $params = [])
     {
         foreach($params as $name => $value) {
-            $this->__set($name, $value);
+            $this->set($name, $value);
         }
     }
 
     /**
-     * $name will be in lowerCamelCase, or converted if not..
+     * Set a property, using a setter method if there is one.
+     * $name will be in lowerCamelCase, or converted if not.
+     *
+     * @param string $name
+     * @param mixed $value
+     * @return $this
      */
-    public function __set($name, $value)
+    protected function set($name, $value)
     {
         $property = $this->snakeToCamel($name);
-        $setter_name = 'set' . ucfirst($property);
+        $setterName = 'set' . ucfirst($property);
 
-        if (method_exists($this, $setter_name)) {
-            return $this->$setter_name($value);
+        if (method_exists($this, $setterName)) {
+            return $this->$setterName($value);
         }
 
         if (property_exists($this, $property)) {
             $this->$property = $value;
         }
+
+        return $this;
     }
 
+    /**
+     * Return a property value using a getter if available, or directly.
+     * Returns null if the property does not exist.
+     *
+     * @param string $name The property name, camel or snake case.
+     * @return mixed property name or null if no such property
+     */
     public function __get($name)
     {
         $property = $this->snakeToCamel($name);
+        $getterName = 'get' . ucfirst($property);
+
+        if (method_exists($this, $getterName)) {
+            return $this->$getterName();
+        }
 
         if (property_exists($this, $property)) {
             return $this->$property;
+        }
+    }
+
+    /**
+     * Support public get/with methods.
+     */
+    public function __call($method, $args)
+    {
+        if (substr($method, 0, 3) === 'get') {
+            $property = $this->snakeToCamel(substr($method, 3));
+
+            return $this->$property;
+        }
+
+        if (substr($method, 0, 4) === 'with') {
+            $property = $this->snakeToCamel(substr($method, 4));
+
+            $clone  = clone $this;
+            $clone->$property = $args[0];
+            return $clone;
         }
     }
 
@@ -100,11 +136,22 @@ class Config
     protected function setOauth1Additional(array $value)
     {
         $this->oauth1Additional = $value;
+        return $this;
     }
 
     protected function setTokenRefreshCallback(callable $value)
     {
         $this->tokenRefreshCallback = $value;
+        return $this;
+    }
+
+    /**
+     *
+     */
+    protected function setEndpoint(Endpoint $value)
+    {
+        $this->endpoint = $value;
+        return $this;
     }
 
     /**

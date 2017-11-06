@@ -22,45 +22,44 @@ class API
     }
 
     /**
-     * TODO: we should pass the base endpoint into the Config
-     * rathe than all tbe constituent parts.
-     *
      * @return Endpoint Get the resource endpoint.
      */
     public function getURL($resource = null)
     {
-        return new Endpoint(
-            $this->config->baseUrl,
-            $this->config->api,
-            $resource,
-            $this->config->version
-        );
+        return $this->config->getEndpoint()
+            ->withResource($resource);
     }
 
+    // TODO: getPayrollUrl etc.
+
     /**
-     * Get the OAuth URL
+     * Get the OAuth URL Endpoint
      */
     public function getOAuthURL($resource)
     {
-        return new Endpoint(
-            $this->config->baseUrl,
-            Endpoint::API_OAUTH,
-            $resource
-        );
+        $endpoint = $this->config->endpoint;
+
+        return $endpoint
+            ->withApi($endpoint->API_OAUTH)
+            ->withResource($resource);
     }
 
     public function createOAuth1Handler(array $overrideConfig = [])
     {
-        $config = [
+        $oauth1Config = [
             'consumer_key'    => $this->config->consumerKey,
             'consumer_secret' => $this->config->consumerSecret,
             'token'           => $this->config->oauthToken,
             'token_secret'    => $this->config->oauthTokenSecret,
         ];
 
-        $config = array_merge($config, $this->config->oauth1Additional, $overrideConfig);
+        $oauth1Config = array_merge(
+            $oauth1Config,
+            $this->config->oauth1Additional,
+            $overrideConfig
+        );
 
-        $oauth1 = new Oauth1($config);
+        $oauth1 = new Oauth1($oauth1Config);
 
         return $oauth1;
     }
@@ -82,15 +81,19 @@ class API
      */
     public function createClient(array $additionalConfig = [])
     {
-        $config = [
+        $clientConfig = [
             'base_uri' => (string)$this->getURL(),
             'auth' => 'oauth',
         ];
 
         // FIXME: we probably want a recursive merge to slip in the override options nicely.
-        $config = array_merge($config, $this->config->clientAdditional, $additionalConfig);
+        $clientConfig = array_merge(
+            $clientConfig,
+            $this->config->clientAdditional,
+            $additionalConfig
+        );
 
-        $client = new Client($config);
+        $client = new Client($clientConfig);
 
         return $client;
     }
