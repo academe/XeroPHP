@@ -4,7 +4,7 @@ namespace Academe\XeroPHP;
 
 /**
  * Simple value object for the OAuth response parameters.
- * Just a little more convenient than an array.
+ * A little more intelligent than an array.
  */
 
 class OAuthParams implements \JsonSerializable
@@ -29,7 +29,8 @@ class OAuthParams implements \JsonSerializable
      */
     public function __construct($data)
     {
-        // CHECKME: any other array-able types we could take account of?
+        // CHECKME: any other array-like interfaces we could take account of?
+
         if (is_array($data)) {
             $this->params = $data;
         } else {
@@ -38,6 +39,7 @@ class OAuthParams implements \JsonSerializable
 
         // The created timestamp can be set if, for example, we are extracting
         // and hydrating from storage.
+
         if ($this->created_at) {
             $this->createdTimestamp = $this->created_at;
         } else {
@@ -68,14 +70,16 @@ class OAuthParams implements \JsonSerializable
      */
     public function expiresAt()
     {
-        // If an expiry time has already been set explicitly, then return that
-        // as authoritive.
-        if ($this->expires_at) {
-            return $this->expires_at;
+        // If an expiry time has already been set explicitly, then that
+        // is authoritive.
+
+        if ($this->oauth_expires_at) {
+            return $this->oauth_expires_at;
         }
 
         // Otherwise use the time this object was created (the created_at timestamp
         // given to it at instantiation).
+
         if ($this->oauth_expires_in) {
             return $this->createdTimestamp + (int)$this->oauth_expires_in;
         }
@@ -95,7 +99,7 @@ class OAuthParams implements \JsonSerializable
         }
 
         if ($this->expiresAt() && $this->remainingTime() <= $guardTime) {
-            // The expires_at is defined/known and we have gone past it.
+            // The oauth_expires_at is defined/known and we have gone past it.
             return true;
         }
 
@@ -124,11 +128,10 @@ class OAuthParams implements \JsonSerializable
     {
         $params = $this->params;
 
-        if (! array_key_exists('created_at', $params) && ! array_key_exists('expires_at')) {
-            // No paramater has been set to define when the token was created or
-            // when it will expire, so add in the creation time of this object.
+        if (! array_key_exists('oauth_expires_at', $params)) {
+            // We don't have an expiry time, set add it to the export.
 
-            $params['created_at'] = $this->createdTimestamp;
+            $params['oauth_expires_at'] = $this->$this->expiresAt();
         }
 
         return $params;
@@ -137,7 +140,7 @@ class OAuthParams implements \JsonSerializable
     /**
      * For interface \JsonSerializable
      * When serialising, we want to make sure we include the creation time if
-     * the expires_at time is not set. The OAuth server does not provide the expiry
+     * the oauth_expires_at time is not set. The OAuth server does not provide the expiry
      * time - that is something that must be tracked and set locally.
      */
     public function jsonSerialize()
