@@ -129,7 +129,7 @@ class Endpoint //implements UriInterface
      * @param string $resource The default resource can be overridden.
      * @return string
      */
-    public function getURL($resource = null)
+    public function getUrl($resource = null)
     {
         // Include the API version only for the non-OAuth API.
         if ($this->api === static::API_OAUTH) {
@@ -143,6 +143,6 @@ class Endpoint //implements UriInterface
 
     public function __toString()
     {
-        return $this->getURL();
+        return $this->getUrl();
     }
 }

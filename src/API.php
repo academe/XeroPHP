@@ -22,25 +22,83 @@ class API
     }
 
     /**
-     * @return Endpoint Get the resource endpoint.
+     * Get the default endpoint, overriding the resource, api and version as necessary.
+     *
+     * @return Endpoint
      */
-    public function getURL($resource = null)
+    public function getUrl($resource = null, $api = null, $version = null)
     {
-        return $this->config->getEndpoint()
-            ->withResource($resource);
+        $endpoint = $this->config->getEndpoint();
+
+        if ($resource !== null) {
+            $endpoint = $endpoint->withResource($resource);
+        }
+
+        if ($api !== null) {
+            $endpoint = $endpoint->withApi($api);
+        }
+
+        if ($version !== null) {
+            $endpoint = $endpoint->withVersion($version);
+        }
+
+        return $endpoint;
     }
 
-    // TODO: getPayrollUrl etc.
+    // The following convenience methods make switching between endpoints
+    // quick and convenient.
+
+    /**
+     * @return Endpoint The payroll URL
+     */
+    public function getPayrollUrl($resource = null, $version = null)
+    {
+        $endpoint = $this->config->getEndpoint();
+        return $this->getUrl($resource, $endpoint::API_PAYROLL, $version);
+    }
+
+    /**
+     * @return Endpoint The GB payroll URL
+     */
+    public function getGbPayrollUrl($resource = null)
+    {
+        return $this->getPayrollUrl(
+            $resource,
+            $this->config->getEndpoint()::VERSION_20
+        );
+    }
+
+    /**
+     * @return Endpoint The AU payroll URL
+     */
+    public function getAuPayrollUrl($resource = null)
+    {
+        return $this->getPayrollUrl(
+            $resource,
+            $this->config->getEndpoint()::VERSION_10
+        );
+    }
+
+    /**
+     * @return Endpoint The NZ payroll URL
+     */
+    public function getNzPayrollUrl($resource = null)
+    {
+        return $this->getPayrollUrl(
+            $resource,
+            $this->config->getEndpoint()::VERSION_10
+        );
+    }
 
     /**
      * Get the OAuth URL Endpoint
      */
-    public function getOAuthURL($resource)
+    public function getOAuthUrl($resource)
     {
         $endpoint = $this->config->endpoint;
 
         return $endpoint
-            ->withApi($endpoint->API_OAUTH)
+            ->withApi($endpoint::API_OAUTH)
             ->withResource($resource);
     }
 
@@ -82,7 +140,7 @@ class API
     public function createClient(array $additionalConfig = [])
     {
         $clientConfig = [
-            'base_uri' => (string)$this->getURL(),
+            'base_uri' => (string)$this->getUrl(),
             'auth' => 'oauth',
         ];
 

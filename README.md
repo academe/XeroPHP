@@ -64,8 +64,6 @@ $config = new XeroPHP\Config([
         'private_key_file' => 'local/path/to/private.pem',
         'private_key_passphrase' => 'your-optional-passphrase',
     ],
-    'api' => 'api.xro', // 'payroll.xro' etc.
-    'version' => '2.0', // '1.0' for AU and US Payroll
     'clientAdditional' => [
         'headers' => [
             // We would like JSON back for most APIs, as it is structured nicely.
@@ -81,7 +79,9 @@ $config = new XeroPHP\Config([
 
         // Now those new crdentials need storing.
         $myStorageObject->storeTheNewTokenWhereever($oauth_token, $oauth_token_secret);
-    }
+    },
+    // Provide the default endpoint.
+    'endpoint' => new Endpoint(...),
 ]);
 
 // The `Config` class will accept `camelCase` or `snake_case` parameters, since
@@ -138,7 +138,11 @@ The `ResponseData` class is instantiated with the response data converted to an 
 
 ```php
 // Get the first page of payruns.
+// This assumes the payrun Endpoint was supplied as the default endpoint:
 $response = $refreshableClient->get('payruns', ['query' => ['page' => 1]]);
+// or if no default endpoint was given in the config:
+$response = $refreshableClient->get($api->getGbPayrollAPI('payruns'), ['query' => ['page' => 1]]);
+
 
 // Assuming all is fine, parse the response to an array.
 $array = XeroPHP\API::parseResponse($response);
