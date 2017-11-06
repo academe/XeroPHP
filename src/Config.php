@@ -57,6 +57,20 @@ class Config
         }
     }
 
+    public function get($name)
+    {
+        $property = $this->snakeToCamel($name);
+        $getterName = 'get' . ucfirst($property);
+
+        if (method_exists($this, $getterName)) {
+            return $this->$getterName();
+        }
+
+        if (property_exists($this, $property)) {
+            return $this->$property;
+        }
+    }
+
     /**
      * Set a property, using a setter method if there is one.
      * $name will be in lowerCamelCase, or converted if not.
@@ -76,9 +90,10 @@ class Config
 
         if (property_exists($this, $property)) {
             $this->$property = $value;
+            return $this;
         }
 
-        return $this;
+        throw new \Exception(sprintf('Property "%s" does not exist and has no setter', $property));
     }
 
     /**
@@ -90,16 +105,7 @@ class Config
      */
     public function __get($name)
     {
-        $property = $this->snakeToCamel($name);
-        $getterName = 'get' . ucfirst($property);
-
-        if (method_exists($this, $getterName)) {
-            return $this->$getterName();
-        }
-
-        if (property_exists($this, $property)) {
-            return $this->$property;
-        }
+        return $this->get($name);
     }
 
     /**
@@ -108,16 +114,12 @@ class Config
     public function __call($method, $args)
     {
         if (substr($method, 0, 3) === 'get') {
-            $property = $this->snakeToCamel(substr($method, 3));
-
-            return $this->$property;
+            return $this->get(substr($method, 3));
         }
 
         if (substr($method, 0, 4) === 'with') {
-            $property = $this->snakeToCamel(substr($method, 4));
-
             $clone  = clone $this;
-            $clone->$property = $args[0];
+            $clone->set(substr($method, 4), $args[0]);
             return $clone;
         }
     }
@@ -162,15 +164,15 @@ class Config
         $clone = clone $this;
 
         if ($params->oauth_token) {
-            $clone->oauthToken = $params->oauth_token;
+            $clone->set('oauthToken', $params->oauth_token);
         }
 
         if ($params->oauth_token_secret) {
-            $clone->oauthTokenSecret = $params->oauth_token_secret;
+            $clone->set('oauthTokenSecret', $params->oauth_token_secret);
         }
 
         if ($params->oauth_expires_in) {
-            $clone->oauthExpiresIn = $params->oauth_expires_in;
+            $clone->set('oauthExpiresIn', $params->oauth_expires_in);
         }
 
         // Trigger the persistence handler.
