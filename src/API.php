@@ -49,6 +49,33 @@ class API
     // quick and convenient.
 
     /**
+     * @return Endpoint The accounting URL
+     */
+    public function getAccountingUrl($resource = null, $version = null)
+    {
+        $endpoint = $this->config->getEndpoint();
+        return $this->getUrl($resource, $endpoint::API_CORE, $version);
+    }
+
+    /**
+     * @return Endpoint The file URL
+     */
+    public function getFileUrl($resource = null, $version = null)
+    {
+        $endpoint = $this->config->getEndpoint();
+        return $this->getUrl($resource, $endpoint::API_FILE, $version);
+    }
+
+    /**
+     * @return Endpoint The asset URL
+     */
+    public function getAssetUrl($resource = null, $version = null)
+    {
+        $endpoint = $this->config->getEndpoint();
+        return $this->getUrl($resource, $endpoint::API_ASSET, $version);
+    }
+
+    /**
      * @return Endpoint The payroll URL
      */
     public function getPayrollUrl($resource = null, $version = null)
@@ -62,9 +89,10 @@ class API
      */
     public function getGbPayrollUrl($resource = null)
     {
+        $endpoint = $this->config->getEndpoint();
         return $this->getPayrollUrl(
             $resource,
-            $this->config->getEndpoint()::VERSION_20
+            $endpoint::VERSION_20
         );
     }
 
@@ -73,9 +101,10 @@ class API
      */
     public function getAuPayrollUrl($resource = null)
     {
+        $endpoint = $this->config->getEndpoint();
         return $this->getPayrollUrl(
             $resource,
-            $this->config->getEndpoint()::VERSION_10
+            $endpoint::VERSION_10
         );
     }
 
@@ -84,9 +113,10 @@ class API
      */
     public function getNzPayrollUrl($resource = null)
     {
+        $endpoint = $this->config->getEndpoint();
         return $this->getPayrollUrl(
             $resource,
-            $this->config->getEndpoint()::VERSION_10
+            $endpoint::VERSION_10
         );
     }
 
@@ -96,7 +126,6 @@ class API
     public function getOAuthUrl($resource)
     {
         $endpoint = $this->config->endpoint;
-
         return $endpoint
             ->withApi($endpoint::API_OAUTH)
             ->withResource($resource);
