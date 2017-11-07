@@ -6,6 +6,7 @@ use GuzzleHttp\Subscriber\Oauth\Oauth1;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Client;
+use Carbon\Carbon;
 
 class API
 {
@@ -230,5 +231,48 @@ class API
     public function arrayToObject(array $data)
     {
         return new ResponseData($data);
+    }
+
+    /**
+     * Convert a snake_case string to camelCase.
+     * Static helper method.
+     * 
+     * @param string $name
+     * @return string
+     */
+    public static function snakeToCamel($name)
+    {
+        return lcfirst(
+            str_replace(
+                '_',
+                '',
+                ucwords($name, '_')
+            )
+        );
+    }
+
+    /**
+     * Convert a persisted and retreived timestamp item to a UTC Carbon object.
+     *
+     * @param mixed $item
+     * @return Carbon
+     */
+    public static function toCarbon($item)
+    {
+        if ($item instanceof Carbon) {
+            return $item->setTimezone('UTC');
+        }
+
+        if ($item instanceof DateTime) {
+            return Carbon::instance($item)->setTimezone('UTC');
+        }
+
+        if (is_integer($item)) {
+            return Carbon::createFromTimestamp($item);
+        }
+
+        if (is_string($item)) {
+            return Carbon::parse($item)->setTimezone('UTC');
+        }
     }
 }

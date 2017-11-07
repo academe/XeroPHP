@@ -6,16 +6,7 @@ namespace Academe\XeroPHP;
  * Simple value object for the OAuth response parameters.
  * A little more intelligent than an array.
  *
- * FIXME: a bit of a confusing mess. OAuth returns unix timestamps and periods
- * in seconds, while storage generally holds full dates in object or string format.
- * Is this doing too much? Do we need one class for parsing OAuth response, and a
- * separate class for handling persisted OAuth data and timeouts? This may make
- * more sense, as one inteprets data provied wrt the current local time and
- * time periods, and the other looks at saved times, which may be relative or
- * absolute, with or without periods. Only the first cares about the tokens, and
- * only the second cares about the expiry status.
- * The first also may get a parameter inidcating the token has expired, while the
- * second only looks at times to determine if the token gas expired.
+ * More methods will be added to interpret more OAuth return parameters.
  *
  * OAuth registration and renewal will give us:
  * - oauth_expires_in - expiry time in seconds for a token from its creation
@@ -30,51 +21,92 @@ namespace Academe\XeroPHP;
  * not supplied in the setup data.
  */
 
+use Carbon\Carbon;
+
 class OAuthParams implements \JsonSerializable
 {
+    /**
+     * @var string Values for the PARAM_OAUTH_PROBLEM parameter
+     */
+    const OAUTH_PROBLEM_TOKEN_EXPIRED = 'token_expired';
+
+    /**
+     * @var string The name of the oauth problem code parameter.
+     */
+    const PARAM_OAUTH_PROBLEM = 'oauthProblem';
+    const PARAM_OAUTH_PROBLEM_ADVICE = 'oauthProblemAdvice';
+
+    const OAUTH_EXPIRES_IN = 'oauthExpiresIn';
+    const OAUTH_EXPIRES_AT = 'oauthExpiresAt';
+    const OAUTH_CREATED_AT = 'oauthCreatedAt';
+    const CREATED_AT = 'createdAt';
+
     /**
      * @var array Parsed OAuth parameters returned from the remote server
      */
     protected $params = [];
 
     /**
-     * Unix timestamp
+     * @var Carbon UTC time this object was created.
      */
-    protected $createdTimestamp;
-
-    /**
-     * Field name for OAuth expiry period/token life (in seconds).
-     */
-    protected $fieldOauthExpiresIn = 'oauth_expires_in';
+    protected $objectCreatedAt;
 
     /**
      * Expects an array.
+     * CHECKME: any other array-like interfaces we could take account of?
      */
     public function __construct($data)
     {
-        // CHECKME: any other array-like interfaces we could take account of?
-
-        if (is_array($data)) {
-            $this->params = $data;
-        } else {
-            $this->params = (array)$data;
+        foreach((array)$data as $name => $value) {
+            $this->set($name, $value);
         }
 
-        // The created timestamp can be set if, for example, we are extracting
-        // and hydrating from storage.
+        $this->objectCreatedAt = Carbon::now('UTC');
+    }
 
-        if ($this->created_at) {
-            $this->createdTimestamp = $this->created_at;
-        } else {
-            $this->createdTimestamp = time();
+    public function get($name)
+    {
+        $property = API::snakeToCamel($name);
+        $getterName = 'get' . ucfirst($property);
+
+        if (method_exists($this, $getterName)) {
+            return $this->$getterName();
         }
+
+        if (array_key_exists($property, $this->params)) {
+            return $this->params[$property];
+        }
+    }
+
+    protected function set($name, $value)
+    {
+        $property = API::snakeToCamel($name);
+        $setterName = 'set' . ucfirst($property);
+
+        if (method_exists($this, $setterName)) {
+            return $this->$setterName($value);
+        }
+
+        $this->params[$property] = $value;
+
+        return $this;
+    }
+
+    /**
+     * The oauth_expires_in parameter is measured in integer seconds.
+     *
+     * @param string|int $expirySeconds Expiry castable to integer seconds.
+     * @return $this
+     */
+    protected function setOauthExpiresIn($expirySeconds)
+    {
+        $this->params[static::OAUTH_EXPIRES_IN] = (int)$expirySeconds;
+        return $this;
     }
 
     public function __get($name)
     {
-        if ($this->__isset($name)) {
-            return $this->params[$name];
-        }
+        return $this->get($name);
     }
 
     public function __isset($name)
@@ -82,89 +114,126 @@ class OAuthParams implements \JsonSerializable
         return array_key_exists($name, $this->params);
     }
 
+    /**
+     * Calculate the expiry time.
+     *
+     * @return Carbon UTC time the tokens are expected to expire.
+     */
+    public function getOauthExpiresAt()
+    {
+        if (array_key_exists(static::OAUTH_EXPIRES_AT, $this->params)) {
+            return $this->params[static::OAUTH_EXPIRES_AT];
+        }
+
+        return $this->get(static::CREATED_AT)
+            ->copy()->addSeconds($this->get(static::OAUTH_EXPIRES_IN));
+    }
+
+    /**
+     * The oauthExpiresAt parameter is parsed to a Carbon datetime.
+     *
+     * @param mixed $createdAtTime
+     * $return $this
+     */
+    protected function setOauthExpiresAt($value)
+    {
+        $this->params[static::OAUTH_EXPIRES_AT] = API::toCarbon($value);
+        return $this;
+    }
+
+    /**
+     * The token created time may be supplied as oauth_created_at or
+     * created_at, falling back to the time this object was created.
+     *
+     * @return Carbon UTC time the tokens were created or refreshed.
+     */
+    public function getCreatedAt()
+    {
+        if (array_key_exists(static::CREATED_AT, $this->params)) {
+            return $this->params[static::CREATED_AT];
+        } elseif (array_key_exists(static::OAUTH_CREATED_AT, $this->params)) {
+            return $this->params[static::OAUTH_CREATED_AT];
+        } else {
+            return $this->objectCreatedAt;
+        }
+    }
+
+    /**
+     * The createdAt parameter is parsed to a Carbon datetime.
+     *
+     * @param mixed $createdAtTime
+     * $return $this
+     */
+    protected function setCreatedAt($createdAtTime)
+    {
+        $this->params[static::CREATED_AT] = API::toCarbon($createdAtTime);
+        return $this;
+    }
+
+    /**
+     * @return array All parsed and calculated parameters.
+     */
     public function getAll()
     {
-        return $this->params;
+        return array_merge(
+            $this->params,
+            [
+                static::CREATED_AT => $this->get(static::CREATED_AT),
+                static::OAUTH_EXPIRES_AT => $this->get(static::OAUTH_EXPIRES_AT),
+            ]
+        );
     }
 
     /**
-     * Convenience function to convert the "expires_in" value to the
-     * local timestamp it expires at.
+     * @return bool True if the parameters indicates the token has expired
      */
-    public function expiresAt()
+    public function isExpired()
     {
-        // If an expiry time has already been set explicitly, then that
-        // is authoritive.
-
-        if ($this->oauth_expires_at) {
-            return $this->oauth_expires_at;
-        }
-
-        // Otherwise use the time this object was created (the created_at timestamp
-        // given to it at instantiation).
-
-        if ($this->oauth_expires_in) {
-            return $this->createdTimestamp + (int)$this->oauth_expires_in;
-        }
-    }
-
-    /**
-     * Tells us if the parameters indicates that tokens have expired
-     * or the expiry time has ellapsed.
-     */
-    public function isExpired($guardTime = 0)
-    {
-        if ($this->oauth_problem === 'token_expired') {
+        if ($this->get(static::PARAM_OAUTH_PROBLEM) === static::OAUTH_PROBLEM_TOKEN_EXPIRED) {
             // The server has indicated the token we just tried to
             // use has expired.
 
             return true;
         }
 
-        if ($this->expiresAt() && $this->remainingTime() <= $guardTime) {
-            // The oauth_expires_at is defined/known and we have gone past it.
+        if ($this->getRemainingSeconds() <= 0) {
+            // Time has run out already.
+
             return true;
         }
 
-        // Not expired, so far as we know given the information we have.
+        // Not expired, given the information we have.
         return false;
     }
 
     /**
      * Tells us if there is a token here, signalling perhaps a successful
-     * token refresh.
+     * token fetch or refresh.
      */
     public function hasToken()
     {
-        return ! empty($this->oauth_token);
+        $oauthToken = $this->oauthToken;
+
+        return ! empty($oauthToken);
     }
 
     /**
      * The remaining time before the token is expected to expire.
+     * @return int Time returned in seconds (only while expiresAt() returns seconds).
      */
-    public function remainingTime()
+    public function getRemainingSeconds()
     {
-        return $this->expiresAt() - time();
+        // Keep the sign so we know when we are past the expiry time.
+        return Carbon::now('UTC')->diffInSeconds($this->oauth_expires_at, false);
     }
 
     public function toArray()
     {
-        $params = $this->params;
-
-        if (! array_key_exists('oauth_expires_at', $params)) {
-            // We don't have an expiry time, set add it to the export.
-
-            $params['oauth_expires_at'] = $this->$this->expiresAt();
-        }
-
-        return $params;
+        return $this->getAll();
     }
 
     /**
      * For interface \JsonSerializable
-     * When serialising, we want to make sure we include the creation time if
-     * the oauth_expires_at time is not set. The OAuth server does not provide the expiry
-     * time - that is something that must be tracked and set locally.
      */
     public function jsonSerialize()
     {

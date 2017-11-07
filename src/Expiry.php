@@ -37,7 +37,7 @@ class Expiry
     {
 
         foreach((array)$data as $key => $value) {
-            $name = $this->snakeToCamel($key);
+            $name = API::snakeToCamel($key);
 
             if ($name === 'oauthExpiresAt' || $name === 'expiresAt') {
                 $this->setOAuthExpiresAt($value);
@@ -55,45 +55,12 @@ class Expiry
         }
     }
 
-    protected function snakeToCamel($name)
-    {
-        return lcfirst(
-            str_replace(
-                '_',
-                '',
-                ucwords($name, '_')
-            )
-        );
-    }
-
-    /**
-     * Convert a persisted and retreived timestamp item to a UTC Carbon object.
-     */
-    public function toCarbon($item)
-    {
-        if ($item instanceof Carbon) {
-            return $item->setTimezone('UTC');
-        }
-
-        if ($item instanceof DateTime) {
-            return Carbon::instance($item)->setTimezone('UTC');
-        }
-
-        if (is_integer($item)) {
-            return Carbon::createFromTimestamp($item);
-        }
-
-        if (is_string($item)) {
-            return Carbon::parse($item)->setTimezone('UTC');
-        }
-    }
-
     /**
      * @param int|string|Carbon|DateTime $expiresAt
      */
     protected function setOAuthExpiresAt($expiresAt)
     {
-        $this->oauth_expires_at = $this->toCarbon($expiresAt);
+        $this->oauth_expires_at = API::toCarbon($expiresAt);
     }
 
     /**
@@ -101,7 +68,7 @@ class Expiry
      */
     protected function setOAuthCreatedAt($createdAt)
     {
-        $this->oauth_created_at = $this->toCarbon($createdAt);
+        $this->oauth_created_at = API::toCarbon($createdAt);
     }
 
     /**

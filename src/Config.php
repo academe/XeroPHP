@@ -59,7 +59,7 @@ class Config
 
     public function get($name)
     {
-        $property = $this->snakeToCamel($name);
+        $property = API::snakeToCamel($name);
         $getterName = 'get' . ucfirst($property);
 
         if (method_exists($this, $getterName)) {
@@ -81,7 +81,7 @@ class Config
      */
     protected function set($name, $value)
     {
-        $property = $this->snakeToCamel($name);
+        $property = API::snakeToCamel($name);
         $setterName = 'set' . ucfirst($property);
 
         if (method_exists($this, $setterName)) {
@@ -122,17 +122,6 @@ class Config
             $clone->set(substr($method, 4), $args[0]);
             return $clone;
         }
-    }
-
-    protected function snakeToCamel($name)
-    {
-        return lcfirst(
-            str_replace(
-                '_',
-                '',
-                ucwords($name, '_')
-            )
-        );
     }
 
     protected function setOauth1Additional(array $value)
