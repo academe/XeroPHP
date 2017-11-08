@@ -189,6 +189,25 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
     }
 
     /**
+     * TODO: refactor this a bit - no need to fetch the item - just check the items array;.
+     */
+    public function __isset($name)
+    {
+        // If this is an empty node, then it has no properties set.
+        if ($this->isEmpty()) {
+            return false;
+        }
+
+        $item = $this->$name;
+
+        if ($item instanceof self && $item->isEmpty()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * @return bool true if this object is a collection of resources
      */
     public function isCollection()
