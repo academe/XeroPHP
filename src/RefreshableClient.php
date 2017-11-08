@@ -138,7 +138,7 @@ class RefreshableClient
                 $refreshRequired = true;
             } else {
                 // Anything else, just throw it again because it is not for us.
-                throw new \Exception('Guzzle exception was not an expired token', null, $e);
+                throw $e;
             }
         }
 
