@@ -72,7 +72,7 @@ class Expiry
     }
 
     /**
-     * @param int $expiresIn In seconds
+     * @param int $expiresIn In seconds; the declared token lifetime
      */
     protected function setExpiresIn($expiresIn)
     {

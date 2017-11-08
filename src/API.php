@@ -228,11 +228,6 @@ class API
         }
     }
 
-    public function arrayToObject(array $data)
-    {
-        return new ResponseData($data);
-    }
-
     /**
      * Convert a snake_case string to camelCase.
      * Static helper method.
@@ -275,4 +270,13 @@ class API
             return Carbon::parse($item)->setTimezone('UTC');
         }
     }
+
+    /**
+     * Convert a parsed response array to a nested ResponseData instance.
+     */
+    public static function arrayToModel(array $data)
+    {
+        return new ResponseData($data);
+    }
+
 }
