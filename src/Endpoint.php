@@ -126,11 +126,15 @@ class Endpoint //implements UriInterface
     }
 
     /**
-     * @param string $resource The default resource can be overridden.
+     * @param string|array $resource The default resource can be overridden.
      * @return string
      */
     public function getUrl($resource = null)
     {
+        if (is_array($resource)) {
+            $resource = implode('/', $resource);
+        }
+
         // Include the API version only for the non-OAuth API.
         if ($this->api === static::API_OAUTH) {
             $path = sprintf('%s/%s', $this->api, $resource ?: $this->resource);

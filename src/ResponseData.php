@@ -301,7 +301,10 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
     }
 
     /**
-     * Return the first resource in the list.
+     * Return the first resource in the list if this is a collection.
+     * TODO: if this is NOT a collection, then look for a collection of
+     * resources (i.e. a collection of self) and return the first from that.
+     * An alias of "item" and "items" for one level up would be useful.
      */
     public function first()
     {
