@@ -27,7 +27,7 @@ class API
      *
      * @return Endpoint
      */
-    public function getUrl($resource = null, $api = null, $version = null)
+    public function getEndpoint($resource = null, $api = null, $version = null)
     {
         $endpoint = $this->config->getEndpoint();
 
@@ -50,83 +50,84 @@ class API
     // quick and convenient.
 
     /**
-     * @return Endpoint The accounting URL
+     * @return Endpoint The accounting Endpoint
      */
-    public function getAccountingUrl($resource = null, $version = null)
+    public function getAccountingEndpoint($resource = null, $version = null)
     {
         $endpoint = $this->config->getEndpoint();
-        return $this->getUrl($resource, $endpoint::API_CORE, $version);
+        return $this->getEndpoint($resource, $endpoint::API_CORE, $version);
     }
 
     /**
-     * @return Endpoint The file URL
+     * @return Endpoint The file Endpoint
      */
-    public function getFileUrl($resource = null, $version = null)
+    public function getFileEndpoint($resource = null, $version = null)
     {
         $endpoint = $this->config->getEndpoint();
-        return $this->getUrl($resource, $endpoint::API_FILE, $version);
+        return $this->getEndpoint($resource, $endpoint::API_FILE, $version);
     }
 
     /**
-     * @return Endpoint The asset URL
+     * @return Endpoint The asset Endpoint
      */
-    public function getAssetUrl($resource = null, $version = null)
+    public function getAssetEndpoint($resource = null, $version = null)
     {
         $endpoint = $this->config->getEndpoint();
-        return $this->getUrl($resource, $endpoint::API_ASSET, $version);
+        return $this->getEndpoint($resource, $endpoint::API_ASSET, $version);
     }
 
     /**
-     * @return Endpoint The payroll URL
+     * @return Endpoint The payroll Endpoint
      */
-    public function getPayrollUrl($resource = null, $version = null)
+    public function getPayrollEndpoint($resource = null, $version = null)
     {
         $endpoint = $this->config->getEndpoint();
-        return $this->getUrl($resource, $endpoint::API_PAYROLL, $version);
+        return $this->getEndpoint($resource, $endpoint::API_PAYROLL, $version);
     }
 
     /**
-     * @return Endpoint The GB payroll URL
+     * @return Endpoint The GB payroll Endpoint
      */
-    public function getGbPayrollUrl($resource = null)
+    public function getGbPayrollEndpoint($resource = null)
     {
         $endpoint = $this->config->getEndpoint();
-        return $this->getPayrollUrl(
+        return $this->getPayrollEndpoint(
             $resource,
             $endpoint::VERSION_20
         );
     }
 
     /**
-     * @return Endpoint The AU payroll URL
+     * @return Endpoint The AU payroll Endpoint
      */
-    public function getAuPayrollUrl($resource = null)
+    public function getAuPayrollEndpoint($resource = null)
     {
         $endpoint = $this->config->getEndpoint();
-        return $this->getPayrollUrl(
+        return $this->getPayrollEndpoint(
             $resource,
             $endpoint::VERSION_10
         );
     }
 
     /**
-     * @return Endpoint The NZ payroll URL
+     * @return Endpoint The NZ payroll Endpoint
      */
-    public function getNzPayrollUrl($resource = null)
+    public function getNzPayrollEndpoint($resource = null)
     {
         $endpoint = $this->config->getEndpoint();
-        return $this->getPayrollUrl(
+        return $this->getPayrollEndpoint(
             $resource,
             $endpoint::VERSION_10
         );
     }
 
     /**
-     * Get the OAuth URL Endpoint
+     * Get the OAuth Endpoint
      */
-    public function getOAuthUrl($resource)
+    public function getOAuthEndpoint($resource)
     {
         $endpoint = $this->config->endpoint;
+
         return $endpoint
             ->withApi($endpoint::API_OAUTH)
             ->withResource($resource);
@@ -170,7 +171,7 @@ class API
     public function createClient(array $additionalConfig = [])
     {
         $clientConfig = [
-            'base_uri' => (string)$this->getUrl(),
+            'base_uri' => (string)$this->getEndpoint(),
             'auth' => 'oauth',
         ];
 
