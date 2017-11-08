@@ -131,15 +131,18 @@ class Endpoint //implements UriInterface
      */
     public function getUrl($resource = null)
     {
+        // Default the resource if not set.
+        $resource = $resource ?: $this->resource;
+
         if (is_array($resource)) {
             $resource = implode('/', $resource);
         }
 
         // Include the API version only for the non-OAuth API.
         if ($this->api === static::API_OAUTH) {
-            $path = sprintf('%s/%s', $this->api, $resource ?: $this->resource);
+            $path = sprintf('%s/%s', $this->api, $resource);
         } else {
-            $path = sprintf('%s/%s/%s', $this->api, $this->version, $resource ?: $this->resource);
+            $path = sprintf('%s/%s/%s', $this->api, $this->version, $resource);
         }
 
         return sprintf('%s/%s', $this->baseUrl, $path);
