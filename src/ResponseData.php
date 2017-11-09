@@ -92,7 +92,7 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
     protected function parseItem($value, $name = null)
     {
         if (is_array($value)) {
-            return new static($value, $name);
+            return new static($value, $name, $this);
         }
 
         $lcName = strtolower($name);
@@ -160,6 +160,12 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
      * Get an individual property, a field.
      * The property may be a scalar, or may be another object.
      * If the property does not exist, then an empty self will be returned.
+     *
+     * TODO: refactor the method body into a get() method, and allow scalar defaults
+     * to be set for unset properties. It is unclear how walking the structure with
+     * a default would work through, as only the very last data object in the chain
+     * can return the default, ad the last does not know it's the last. So a helper
+     * function to wrap a data walk maybe?
      */
     public function __get($name)
     {
@@ -327,8 +333,23 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
      */
     public function first()
     {
-        $this->rewind();
-        return $this->current();
+        // If this object *is* a collection of models, then return the first model.
+
+        if ($this->isCollection()) {
+            $this->rewind();
+            return $this->current();
+        }
+
+        // If this object *contains* a collection of models, then return the first
+        // of that collection.
+
+        // Loop over the fields and return the first one we find that is a collection.
+
+        foreach($this->items as $item) {
+            if ($item instanceof self && $item->isCollection()) {
+                return $item->first();
+            }
+        }
     }
 
     /**
@@ -341,5 +362,33 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
         } else {
             throw \Exception('Cannot convert object to string');
         }
+    }
+
+    /**
+     * Return a collection of resources in the model.
+     * If the model is a collection of resources, then $this will be returned.
+     * If the model is a single response but has a field that is a collection of
+     * resources, the that field will be returned. For example, GET to the
+     * Payments endpoint will return a response with a Payments field collection.
+     * If the modle is a single resource, then it will be wrapped into a collection???
+     *
+     * Now it gets complicated. The older API wraps even a single resource into an array.
+     * The newer API (GB Payroll) does not; it only wraps multiple resources into an array
+     * when using JSON at least. The two structures need to be brought into line so
+     * accessing a single item or a collection of items is consistent.
+     */
+    public function getResources()
+    {
+        if ($this->isCollection() || $this->isEmpty()) {
+            return $this;
+        }
+
+        foreach($this->items as $item) {
+            if ($item instanceof self && $item->isCollection()) {
+                return $item;
+            }
+        }
+
+        return new static([$this], '', $this);
     }
 }

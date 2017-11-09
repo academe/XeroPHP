@@ -25,6 +25,11 @@ class Config
     protected $oauthToken;
     protected $oauthTokenSecret;
 
+    /**
+     * @var int The number of seconds the token is expected to live.
+     */
+    protected $oauthExpiresIn;
+
     // Token expiry time and refresh token.
     // expires_at as the local unix timestamp, calculated when the
     // token was first obtained or last refreshed.
@@ -93,7 +98,7 @@ class Config
             return $this;
         }
 
-        throw new \Exception(sprintf('Property "%s" does not exist and has no setter', $property));
+        throw new \Exception(sprintf('Property "%s" does not exist; it cannot be set', $property));
     }
 
     /**
