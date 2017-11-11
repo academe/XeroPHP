@@ -24,6 +24,7 @@ class Endpoint //implements UriInterface
     const API_PAYROLL   = 'payroll.xro';
     const API_FILE      = 'files.xro';
     const API_ASSET     = 'assets.xro';
+    const API_HQ        = 'xero.hq';
 
     /**
      * API to access the OAUTH functionality.

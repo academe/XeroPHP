@@ -52,7 +52,7 @@ class API
     /**
      * @return Endpoint The accounting Endpoint
      */
-    public function getAccountingEndpoint($resource = null, $version = null)
+    public function getAccountingEndpoint($resource = null, $version = Endpoint::VERSION_20)
     {
         $endpoint = $this->config->getEndpoint();
         return $this->getEndpoint($resource, $endpoint::API_CORE, $version);
@@ -61,7 +61,7 @@ class API
     /**
      * @return Endpoint The file Endpoint
      */
-    public function getFileEndpoint($resource = null, $version = null)
+    public function getFileEndpoint($resource = null, $version = Endpoint::VERSION_10)
     {
         $endpoint = $this->config->getEndpoint();
         return $this->getEndpoint($resource, $endpoint::API_FILE, $version);
@@ -70,7 +70,7 @@ class API
     /**
      * @return Endpoint The asset Endpoint
      */
-    public function getAssetEndpoint($resource = null, $version = null)
+    public function getAssetEndpoint($resource = null, $version = Endpoint::VERSION_10)
     {
         $endpoint = $this->config->getEndpoint();
         return $this->getEndpoint($resource, $endpoint::API_ASSET, $version);
@@ -88,37 +88,46 @@ class API
     /**
      * @return Endpoint The GB payroll Endpoint
      */
-    public function getGbPayrollEndpoint($resource = null)
+    public function getGbPayrollEndpoint($resource = null, $version = Endpoint::VERSION_20)
     {
         $endpoint = $this->config->getEndpoint();
         return $this->getPayrollEndpoint(
             $resource,
-            $endpoint::VERSION_20
+            $version
         );
     }
 
     /**
      * @return Endpoint The AU payroll Endpoint
      */
-    public function getAuPayrollEndpoint($resource = null)
+    public function getAuPayrollEndpoint($resource = null, $version = Endpoint::VERSION_10)
     {
         $endpoint = $this->config->getEndpoint();
         return $this->getPayrollEndpoint(
             $resource,
-            $endpoint::VERSION_10
+            $version
         );
     }
 
     /**
      * @return Endpoint The NZ payroll Endpoint
      */
-    public function getNzPayrollEndpoint($resource = null)
+    public function getNzPayrollEndpoint($resource = null, $version = Endpoint::VERSION_10)
     {
         $endpoint = $this->config->getEndpoint();
         return $this->getPayrollEndpoint(
             $resource,
-            $endpoint::VERSION_10
+            $version
         );
+    }
+
+    /**
+     * @return Endpoint The Xero HQ Endpoint
+     */
+    public function getHqEndpoint($resource = null, $version = Endpoint::VERSION_10)
+    {
+        $endpoint = $this->config->getEndpoint();
+        return $this->getEndpoint($resource, $endpoint::API_HQ, $version);
     }
 
     /**
@@ -207,12 +216,13 @@ class API
 
         switch ($contentType) {
             case 'application/json':
-                return json_decode((string)$response->getBody(), true);
+                $data = json_decode((string)$response->getBody(), true);
                 break;
+                //
             case 'text/xml':
                 // This conversion is not so good for navigating due to the way lists
                 // of items are converted. Best to avoid if possible.
-                return json_decode(
+                $data = json_decode(
                     json_encode(
                         simplexml_load_string(
                             (string)$response->getBody(),
@@ -223,10 +233,32 @@ class API
                     true
                 );
                 break;
+                //
+            case 'text/html':
+                // The older format will return a string in the event of an error.
+                // If we have a one-line string, we will wrap it into the simple message
+                // array that the new format uses when a rrequest is malformed.
+                $data = [
+                    'message' => (string)$response->getBody(),
+                    'httpStatusCode' => $response->getStatusCode(),
+                ];
+                break;
+                //
             default:
-                return (string)$response->getBody();
+                $data = (string)$response->getBody();
                 break;
         }
+
+        // Some APIs will return a single error string with a variety of different
+        // claimed content types.
+        if (is_string($data)) {
+            return [
+                'message' => $data,
+                'httpStatusCode' => $response->getStatusCode(),
+            ];
+        }
+
+        return $data;
     }
 
     /**
@@ -275,9 +307,8 @@ class API
     /**
      * Convert a parsed response array to a nested ResponseData instance.
      */
-    public static function arrayToModel(array $data)
+    public static function arrayToModel($data)
     {
         return new ResponseData($data);
     }
-
 }

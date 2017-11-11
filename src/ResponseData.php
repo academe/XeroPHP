@@ -10,6 +10,23 @@ use Carbon\Carbon;
 
 class ResponseData implements \JsonSerializable, \Iterator, \Countable
 {
+    // New format single resource with header.
+    const STRUCTURE_A = 'A';
+    // New format resource list with header
+    // Files resource list
+    const STRUCTURE_B = 'B';
+    const STRUCTURE_C = 'C';
+    const STRUCTURE_D = 'D';
+    // Collection of resources with no header
+    // Old format resource list (can be just a single resource)
+    const STRUCTURE_E = 'E';
+    // Single resource with no wrapper
+    const STRUCTURE_F = 'F';
+    // Simple error message.
+    const STRUCTURE_G = 'G';
+    // New format structure error detail.
+    const STRUCTURE_H = 'H';
+
     /**
      * Original source data.
      */
@@ -29,11 +46,6 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
      * Expanded items.
      */
     protected $items = [];
-
-    /**
-     * True if the items are a numeric collection of resources.
-     */
-    protected $isCollection = false;
 
     /**
      * Interator current pointer.
@@ -58,11 +70,8 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
             $this->parent = $parent;
         }
 
-        // Is this a numeric array or associative?
-        $isAssociative = count(array_filter(array_keys($data), 'is_string')) > 0;
-
-        if ($isAssociative) {
-            // Associatuve keys.
+        if ($this->isAssociative()) {
+            // Data has associatuve keys.
             // Details of one resource.
             foreach ($data as $name => $item) {
                 $this->index[strtolower($name)] = $name;
@@ -72,7 +81,6 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
         } elseif (! empty($data)) {
             // Numeric keys.
             // An array of resource objects.
-            $this->isCollection = true;
 
             foreach ($data as $key => $item) {
                 // The name will normally be the singular of the outer element name.
@@ -116,6 +124,7 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
      * CHECKME: do we ever get a negative timezone offset?
      * FIXME: the timezone offset may or may not be zero, so take it into account.
      * Maybe the offsets need to be converted into a timezone name?
+     * TODO: merge this into API::toCarbon() helper
      */
     public function toDateTime($value)
     {
@@ -214,11 +223,14 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
     }
 
     /**
+     * If the data array is not an associative array then it must be a
+     * collection array with numeric keys. The collection may be empty.
+     *
      * @return bool true if this object is a collection of resources
      */
     public function isCollection()
     {
-        return $this->isCollection;
+        return ! $this->isAssociative();
     }
 
     /**
@@ -250,11 +262,26 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
     }
 
     /**
+     * @return bool true if the source data is an associative array; an object
+     */
+    public function isAssociative()
+    {
+        return count(
+            array_filter(array_keys($this->data), 'is_string')
+        ) > 0;
+    }
+
+    /**
      * @return self|null The parent object, if not the root data object.
      */
     public function getParent()
     {
         return $this->parent;
+    }
+
+    public function hasParent()
+    {
+        return ! ($this->getParent() === null);
     }
 
     /**
@@ -326,33 +353,6 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
     }
 
     /**
-     * Return the first resource in the list if this is a collection.
-     * TODO: if this is NOT a collection, then look for a collection of
-     * resources (i.e. a collection of self) and return the first from that.
-     * An alias of "item" and "items" for one level up would be useful.
-     */
-    public function first()
-    {
-        // If this object *is* a collection of models, then return the first model.
-
-        if ($this->isCollection()) {
-            $this->rewind();
-            return $this->current();
-        }
-
-        // If this object *contains* a collection of models, then return the first
-        // of that collection.
-
-        // Loop over the fields and return the first one we find that is a collection.
-
-        foreach($this->items as $item) {
-            if ($item instanceof self && $item->isCollection()) {
-                return $item->first();
-            }
-        }
-    }
-
-    /**
      * Convert an "empty" object to an empty string.
      */
     public function __tostring()
@@ -365,30 +365,134 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
     }
 
     /**
+     * Return the resource or resources object.
+     */
+    public function getResourceField()
+    {
+        $item = null;
+
+        switch ($this->getStructureType()) {
+            case static::STRUCTURE_E:
+            case static::STRUCTURE_F:
+                $item = $this;
+                break;
+            case static::STRUCTURE_A:
+            case static::STRUCTURE_B:
+            case static::STRUCTURE_C:
+            case static::STRUCTURE_D:
+                foreach($this->items as $checkItem) {
+                    if ($checkItem instanceof self) {
+                        if ($checkItem->name !== 'pagination' && $checkItem->name !== 'problem') {
+                            $item = $checkItem;
+                            break;
+                        }
+                    }
+                }
+                break;
+        }
+
+        return $item;
+    }
+
+    /**
      * Return a collection of resources in the model.
      * If the model is a collection of resources, then $this will be returned.
      * If the model is a single response but has a field that is a collection of
      * resources, the that field will be returned. For example, GET to the
      * Payments endpoint will return a response with a Payments field collection.
      * If the modle is a single resource, then it will be wrapped into a collection???
-     *
-     * Now it gets complicated. The older API wraps even a single resource into an array.
-     * The newer API (GB Payroll) does not; it only wraps multiple resources into an array
-     * when using JSON at least. The two structures need to be brought into line so
-     * accessing a single item or a collection of items is consistent.
      */
     public function getResources()
     {
-        if ($this->isCollection() || $this->isEmpty()) {
-            return $this;
+        $resourceField = $this->getResourceField();
+
+        if ($resourceField === null) {
+            return new static([], '', $this);
         }
 
-        foreach($this->items as $item) {
-            if ($item instanceof self && $item->isCollection()) {
-                return $item;
-            }
+        if ($resourceField->isCollection() || $resourceField->isEmpty()) {
+            return $resourceField;
         }
 
         return new static([$this], '', $this);
+    }
+
+    /**
+     * Get the single resource, or the first resource if there is a collection.
+     */
+    public function getResource()
+    {
+        $resourceField = $this->getResourceField();
+
+        if ($resourceField === null) {
+            return new static([], '', $this);
+        }
+
+        if (! $resourceField->isCollection() || $resourceField->isEmpty()) {
+            return $resourceField;
+        }
+
+        $resourceField->rewind();
+        return $resourceField->current();
+    }
+
+    /**
+     * Check if a field has been provided by the API.
+     *
+     * @param string $name The name of the field.
+     * @return bool true if the item was provided, even if it was null.
+     */
+    public function has($name)
+    {
+        // Only need to check the index.
+
+        return array_key_exists(strtolower($name), $this->index);
+    }
+
+    /**
+     * Determine what top-level data structure we have.
+     * Only relevant on the root level.
+     */
+    public function getStructureType()
+    {
+        if ($this->has('providerName')) {
+            if ($this->has('status')) {
+                return self::STRUCTURE_C; // Or D
+            }
+
+            if ($this->has('httpStatusCode')) {
+                if (! $this->problem->isEmpty()) {
+                    return self::STRUCTURE_H;
+                }
+
+                if ($this->pagination->isEmpty()) {
+                    return self::STRUCTURE_A;
+                } else {
+                    return self::STRUCTURE_B;
+                }
+            }
+        }
+
+        if ($this->has('TotalCount') && $this->has('Items')) {
+            return self::STRUCTURE_B;
+        }
+
+        if ($this->isCollection()) {
+            return self::STRUCTURE_E;
+        }
+
+        if ($this->has('message')) {
+            if ($this->has('httpStatusCode')) {
+                // Old format error of any type
+                return static::STRUCTURE_G;
+            } else {
+                // New format malformed request error
+                return static::STRUCTURE_G;
+            }
+        }
+
+        if ($this->isAssociative()) {
+            return self::STRUCTURE_F;
+        }
     }
 }
