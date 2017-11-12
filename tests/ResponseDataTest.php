@@ -10,6 +10,7 @@ class ResponseDataTest extends TestCase
     protected $gbPayrollEmployee;
     protected $accountingPayments;
     protected $accountingPayment;
+    protected $accountingPaymentsNoMatch;
 
     /**
      * TODO: 404 from Accounting API.
@@ -25,13 +26,17 @@ class ResponseDataTest extends TestCase
         $employeeData = json_decode(file_get_contents(__DIR__ . '/data/gbPayrollEmployee.json'), true);
         $this->gbPayrollEmployee = new ResponseData($employeeData);
 
-        // Three bank payments from the Accounting API v2.0.
+        // Three payments from the Accounting API v2.0.
         $accountingPayments = json_decode(file_get_contents(__DIR__ . '/data/accountingPayments.json'), true);
         $this->accountingPayments = new ResponseData($accountingPayments);
 
-        // Single bank payment from the Accounting API v2.0.
+        // Single payment from the Accounting API v2.0.
         $accountingPayment = json_decode(file_get_contents(__DIR__ . '/data/accountingPayment.json'), true);
         $this->accountingPayment = new ResponseData($accountingPayment);
+
+        // No-match payments from the Accounting API v2.0.
+        $accountingPaymentsNoMatch = json_decode(file_get_contents(__DIR__ . '/data/accountingPaymentsNoMatch.json'), true);
+        $this->accountingPaymentsNoMatch = new ResponseData($accountingPaymentsNoMatch);
     }
 
     // 
@@ -256,5 +261,61 @@ class ResponseDataTest extends TestCase
 
         $this->assertEquals($resource->count(), 1);
         $this->assertEquals(count($resource), 1);
+    }
+
+    //
+
+    /**
+     * Fetching payments with a filter matching no results.
+     */
+    public function testAccountingPaymentNoMatchBase()
+    {
+        $accountingPaymentsNoMatch = $this->accountingPaymentsNoMatch;
+
+        $this->assertEquals($accountingPaymentsNoMatch->isCollection(), false);
+        $this->assertEquals($accountingPaymentsNoMatch->isEmpty(), false);
+        $this->assertEquals($accountingPaymentsNoMatch->isAssociative(), true);
+        $this->assertEquals($accountingPaymentsNoMatch->hasParent(), false);
+        // C: multiple resources with an old (Accounting 2.0) format header
+        $this->assertEquals($accountingPaymentsNoMatch->getStructureType(), ResponseData::STRUCTURE_C);
+
+        $this->assertEquals($accountingPaymentsNoMatch->count(), 0);
+        $this->assertEquals(count($accountingPaymentsNoMatch), 0);
+    }
+
+    /**
+     * Properties of the Accounting 2.0 non-matching Payments resource collection.
+     */
+    public function testAccountingPaymentNoMatchResources()
+    {
+        $resources = $this->accountingPaymentsNoMatch->getResources();
+
+        $this->assertEquals($resources->isCollection(), true);
+        $this->assertEquals($resources->isEmpty(), true);
+        $this->assertEquals($resources->isAssociative(), false);
+        $this->assertEquals($resources->hasParent(), true);
+        // E: naked collection of resources
+        $this->assertEquals($resources->getStructureType(), ResponseData::STRUCTURE_E);
+
+        $this->assertEquals($resources->count(), 0);
+        $this->assertEquals(count($resources), 0);
+    }
+
+    /**
+     * Properties of the Accounting 2.0 non-matching Payments resource collection as a single payment.
+     */
+    public function testAccountingPaymentNoMatchResource()
+    {
+        $resources = $this->accountingPaymentsNoMatch->getResource();
+
+        $this->assertEquals($resources->isCollection(), true);
+        $this->assertEquals($resources->isEmpty(), true);
+        $this->assertEquals($resources->isAssociative(), false);
+        $this->assertEquals($resources->hasParent(), true);
+        // E: naked collection of resources
+        $this->assertEquals($resources->getStructureType(), ResponseData::STRUCTURE_E);
+
+        $this->assertEquals($resources->count(), 0);
+        $this->assertEquals(count($resources), 0);
     }
 }
