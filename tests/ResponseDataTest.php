@@ -6,25 +6,35 @@ use PHPUnit\Framework\TestCase;
 
 class ResponseDataTest extends TestCase
 {
+    protected $gbPayrollEmployees;
+    protected $gbPayrollEmployee;
+
     public function setUp()
     {
-        $employeesData = json_decode(file_get_contents(__DIR__ . '/data/employees.json'), true);
-        $this->employees = new ResponseData($employeesData);
+        $employeesData = json_decode(file_get_contents(__DIR__ . '/data/gbPayrollEmployees.json'), true);
+        $this->gbPayrollEmployees = new ResponseData($employeesData);
+
+        $employeeData = json_decode(file_get_contents(__DIR__ . '/data/gbPayrollEmployee.json'), true);
+        $this->gbPayrollEmployee = new ResponseData($employeeData);
     }
 
-    public function testEmployeesRoot()
+    //
+
+    public function testGbPayrollEmployeesRoot()
     {
-        $this->assertEquals($this->employees->isCollection(), false);
-        $this->assertEquals($this->employees->isEmpty(), false);
-        $this->assertEquals($this->employees->isAssociative(), true);
-        $this->assertEquals($this->employees->hasParent(), false);
-        // B: resource or resources with new format header
-        $this->assertEquals($this->employees->getStructureType(), ResponseData::STRUCTURE_B);
+        $employees = $this->gbPayrollEmployees;
+
+        $this->assertEquals($employees->isCollection(), false);
+        $this->assertEquals($employees->isEmpty(), false);
+        $this->assertEquals($employees->isAssociative(), true);
+        $this->assertEquals($employees->hasParent(), false);
+        // B: multiple resources with new format header
+        $this->assertEquals($employees->getStructureType(), ResponseData::STRUCTURE_B);
     }
 
-    public function testEmployeesResources()
+    public function testGbPayrollEmployeesResources()
     {
-        $resources = $this->employees->getResources();
+        $resources = $this->gbPayrollEmployees->getResources();
 
         $this->assertEquals($resources->isCollection(), true);
         $this->assertEquals($resources->isEmpty(), false);
@@ -37,9 +47,50 @@ class ResponseDataTest extends TestCase
         $this->assertEquals(count($resources), 2);
     }
 
-    public function testEmployeesResource()
+    public function testGbPayrollEmployeesResource()
     {
-        $resource = $this->employees->getResource();
+        $resource = $this->gbPayrollEmployees->getResource();
+
+        $this->assertEquals($resource->isCollection(), false);
+        $this->assertEquals($resource->isEmpty(), false);
+        $this->assertEquals($resource->isAssociative(), true);
+        $this->assertEquals($resource->hasParent(), true);
+        // F: single naked resource
+        $this->assertEquals($resource->getStructureType(), ResponseData::STRUCTURE_F);
+    }
+
+    //
+
+    public function testGbPayrollEmployeeRoot()
+    {
+        $employee = $this->gbPayrollEmployee;
+
+        $this->assertEquals($employee->isCollection(), false);
+        $this->assertEquals($employee->isEmpty(), false);
+        $this->assertEquals($employee->isAssociative(), true);
+        $this->assertEquals($employee->hasParent(), false);
+        // A: single resource with new format header
+        $this->assertEquals($employee->getStructureType(), ResponseData::STRUCTURE_A);
+    }
+
+    public function testGbPayrollEmployeeResources()
+    {
+        $resources = $this->gbPayrollEmployee->getResources();
+
+        $this->assertEquals($resources->isCollection(), true);
+        $this->assertEquals($resources->isEmpty(), false);
+        $this->assertEquals($resources->isAssociative(), false);
+        $this->assertEquals($resources->hasParent(), true);
+        // E: naked collection of resources
+        $this->assertEquals($resources->getStructureType(), ResponseData::STRUCTURE_E);
+
+        $this->assertEquals($resources->count(), 1);
+        $this->assertEquals(count($resources), 1);
+    }
+
+    public function testGbPayrollEmployeeResource()
+    {
+        $resource = $this->gbPayrollEmployee->getResource();
 
         $this->assertEquals($resource->isCollection(), false);
         $this->assertEquals($resource->isEmpty(), false);
