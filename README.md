@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/academe/XeroPHP.svg?branch=master)](https://travis-ci.org/academe/XeroPHP)
+
 XeroPHP API OAuth Access
 ========================
 
