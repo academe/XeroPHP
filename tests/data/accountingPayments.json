@@ -1,0 +1,185 @@
+{
+   "Id":"9cc7785c-1de0-419e-a397-8548df34e018",
+   "Status":"OK",
+   "ProviderName":"My Application",
+   "DateTimeUTC":"\/Date(1510506717268)\/",
+   "Payments":[
+      {
+         "PaymentID":"87fa00b1-5ac5-402c-b7df-cd3f327be75b",
+         "Date":"\/Date(1437091200000+0000)\/",
+         "BankAmount":50,
+         "Amount":50,
+         "Reference":"",
+         "CurrencyRate":1,
+         "PaymentType":"ACCRECPAYMENT",
+         "Status":"AUTHORISED",
+         "UpdatedDateUTC":"\/Date(1437171113517+0000)\/",
+         "HasAccount":true,
+         "IsReconciled":false,
+         "Account":{
+            "AccountID":"9e10faa5-455a-4d39-896c-c00bcd75f90e",
+            "Code":"CONSIL"
+         },
+         "Invoice":{
+            "Type":"ACCREC",
+            "InvoiceID":"30f29d44-1623-4bde-83a9-354a2d1cffcd",
+            "InvoiceNumber":"INV-0001",
+            "Payments":[
+
+            ],
+            "CreditNotes":[
+
+            ],
+            "Prepayments":[
+
+            ],
+            "Overpayments":[
+
+            ],
+            "HasErrors":false,
+            "IsDiscounted":false,
+            "Contact":{
+               "ContactID":"9ca7f25c-bf76-4aff-99dc-585d6822b172",
+               "ContactNumber":"",
+               "Name":"ACME STUFF",
+               "Addresses":[
+
+               ],
+               "Phones":[
+
+               ],
+               "ContactGroups":[
+
+               ],
+               "ContactPersons":[
+
+               ],
+               "HasValidationErrors":false
+            },
+            "LineItems":[
+
+            ],
+            "CurrencyCode":"GBP"
+         },
+         "HasValidationErrors":false
+      },
+      {
+         "PaymentID":"7c932427-b34e-4728-9ef3-304557680688",
+         "Date":"\/Date(1437177600000+0000)\/",
+         "BankAmount":50,
+         "Amount":50,
+         "Reference":"",
+         "CurrencyRate":1,
+         "PaymentType":"ACCPAYPAYMENT",
+         "Status":"AUTHORISED",
+         "UpdatedDateUTC":"\/Date(1437171335010+0000)\/",
+         "HasAccount":true,
+         "IsReconciled":false,
+         "Account":{
+            "AccountID":"9e10faa5-455a-4d39-896c-c00bcd75f90e",
+            "Code":"CONSIL"
+         },
+         "Invoice":{
+            "Type":"ACCPAY",
+            "InvoiceID":"0388dd8a-420e-49c6-a955-efc2c5b22b7a",
+            "InvoiceNumber":"",
+            "Payments":[
+
+            ],
+            "CreditNotes":[
+
+            ],
+            "Prepayments":[
+
+            ],
+            "Overpayments":[
+
+            ],
+            "HasErrors":false,
+            "IsDiscounted":false,
+            "Contact":{
+               "ContactID":"9ca7f25c-bf76-4aff-99dc-585d6822b172",
+               "ContactNumber":"",
+               "Name":"ACME STUFF",
+               "Addresses":[
+
+               ],
+               "Phones":[
+
+               ],
+               "ContactGroups":[
+
+               ],
+               "ContactPersons":[
+
+               ],
+               "HasValidationErrors":false
+            },
+            "LineItems":[
+
+            ],
+            "CurrencyCode":"GBP"
+         },
+         "HasValidationErrors":false
+      },
+      {
+         "PaymentID":"b5fc04b1-91c2-4fe7-815b-ff1c85a26e2e",
+         "Date":"\/Date(1437091200000+0000)\/",
+         "BankAmount":45,
+         "Amount":45,
+         "Reference":"",
+         "CurrencyRate":1,
+         "PaymentType":"ACCPAYPAYMENT",
+         "Status":"DELETED",
+         "UpdatedDateUTC":"\/Date(1439480648387+0000)\/",
+         "HasAccount":true,
+         "IsReconciled":false,
+         "Account":{
+            "AccountID":"9e10faa5-455a-4d39-896c-c00bcd75f90e",
+            "Code":"CONSIL"
+         },
+         "Invoice":{
+            "Type":"ACCPAY",
+            "InvoiceID":"0388dd8a-420e-49c6-a955-efc2c5b22b7a",
+            "InvoiceNumber":"",
+            "Payments":[
+
+            ],
+            "CreditNotes":[
+
+            ],
+            "Prepayments":[
+
+            ],
+            "Overpayments":[
+
+            ],
+            "HasErrors":false,
+            "IsDiscounted":false,
+            "Contact":{
+               "ContactID":"9ca7f25c-bf76-4aff-99dc-585d6822b172",
+               "ContactNumber":"",
+               "Name":"ACME STUFF",
+               "Addresses":[
+
+               ],
+               "Phones":[
+
+               ],
+               "ContactGroups":[
+
+               ],
+               "ContactPersons":[
+
+               ],
+               "HasValidationErrors":false
+            },
+            "LineItems":[
+
+            ],
+            "CurrencyCode":"GBP"
+         },
+         "HasValidationErrors":false
+      }
+   ]
+}

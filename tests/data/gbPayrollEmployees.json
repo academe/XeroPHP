@@ -1,0 +1,27 @@
+{
+   "id":"5d68e2c9-175b-41d8-8a9e-c2527110945f",
+   "providerName":"Test App",
+   "dateTimeUTC":"2017-11-12T13:07:04.0734344",
+   "httpStatusCode":"OK",
+   "pagination":{
+      "page":1,
+      "pageSize":100,
+      "pageCount":1,
+      "itemCount":2
+   },
+   "problem":null,
+   "employees":[
+      {
+         "employeeID":"85c97405-67f9-463b-061a-e1eeaf82",
+         "firstName":"Employee-One",
+         "lastName":"Bloggs",
+         "dateOfBirth":"1960-01-01T00:00:00"
+      },
+      {
+         "employeeID":"48c72818-1dcf-4b2c-b271-e57c83da55a0",
+         "firstName":"EmployeeTwo",
+         "lastName":"Two",
+         "dateOfBirth":"1972-12-31T00:00:00"
+      }
+   ]
+}

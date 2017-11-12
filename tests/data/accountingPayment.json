@@ -1,0 +1,101 @@
+{
+   "Id":"17b3eb6e-f847-4255-936e-747e7f2d0717",
+   "Status":"OK",
+   "ProviderName":"My Application",
+   "DateTimeUTC":"\/Date(1510507419633)\/",
+   "Payments":[
+      {
+         "PaymentID":"87fa00b1-5ac5-402c-b7df-cd3f327be75b",
+         "Date":"\/Date(1437091200000+0000)\/",
+         "BankAmount":50,
+         "Amount":50,
+         "CurrencyRate":1,
+         "PaymentType":"ACCRECPAYMENT",
+         "Status":"AUTHORISED",
+         "UpdatedDateUTC":"\/Date(1437171113517+0000)\/",
+         "HasAccount":true,
+         "IsReconciled":false,
+         "Account":{
+            "AccountID":"9e10faa5-455a-4d39-896c-c00bcd75f90e",
+            "Code":"CONSIL",
+            "Name":"My Bank Acct to pay bills"
+         },
+         "Invoice":{
+            "Type":"ACCREC",
+            "InvoiceID":"30f29d44-1623-4bde-83a9-354a2d1cffcd",
+            "InvoiceNumber":"INV-0001",
+            "Reference":"",
+            "Payments":[
+               {
+                  "PaymentID":"87fa00b1-5ac5-402c-b7df-cd3f327be75b",
+                  "Date":"\/Date(1437091200000+0000)\/",
+                  "Amount":50,
+                  "CurrencyRate":1,
+                  "HasAccount":false,
+                  "HasValidationErrors":false
+               },
+               {
+                  "PaymentID":"7c890ea9-c618-4146-bf11-6f39d4d63deb",
+                  "Date":"\/Date(1439251200000+0000)\/",
+                  "Amount":8.1,
+                  "Reference":"dan-test-1",
+                  "CurrencyRate":1,
+                  "HasAccount":false,
+                  "HasValidationErrors":false
+               }
+            ],
+            "Prepayments":[
+
+            ],
+            "Overpayments":[
+
+            ],
+            "AmountDue":180.7,
+            "AmountPaid":58.1,
+            "SentToContact":false,
+            "CurrencyRate":1,
+            "HasErrors":false,
+            "IsDiscounted":false,
+            "Contact":{
+               "ContactID":"9ca7f25c-bf76-4aff-99dc-585d6822b172",
+               "Name":"ACME STUFF",
+               "ContactPersons":[
+
+               ],
+               "HasValidationErrors":false
+            },
+            "DateString":"2015-07-17T00:00:00",
+            "Date":"\/Date(1437091200000+0000)\/",
+            "DueDateString":"2015-07-31T00:00:00",
+            "DueDate":"\/Date(1438300800000+0000)\/",
+            "Status":"AUTHORISED",
+            "LineAmountTypes":"Exclusive",
+            "LineItems":[
+               {
+                  "ItemCode":"STUFF1",
+                  "Description":"Nice stuff",
+                  "UnitAmount":199,
+                  "TaxType":"OUTPUT2",
+                  "TaxAmount":39.8,
+                  "LineAmount":199,
+                  "AccountCode":"200",
+                  "Tracking":[
+
+                  ],
+                  "Quantity":1,
+                  "LineItemID":"4d3a0b20-6610-4d67-a2d7-7da2816589d9",
+                  "ValidationErrors":[
+
+                  ]
+               }
+            ],
+            "SubTotal":199,
+            "TotalTax":39.8,
+            "Total":238.8,
+            "UpdatedDateUTC":"\/Date(1439292991837+0000)\/",
+            "CurrencyCode":"GBP"
+         },
+         "HasValidationErrors":false
+      }
+   ]
+}

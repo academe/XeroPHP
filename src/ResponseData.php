@@ -337,19 +337,14 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
     }
 
     /**
-     * For interface Countable
+     * For interface Countable.
      */
     public function count()
     {
-        if ($this->isCollection()) {
-            // If this is a collection, then each item is a resource.
-            return count($this->items);
-        } else {
-            // This object is a single resource if any items are set,
-            // each item being a resource property, or is empty if no
-            // items are set.
-            return count($this->items) ? 1 : 0;
-        }
+        // getResources() does the heavy lifting of finding where the resource or
+        // resources are.
+        $resources = $this->getResources();
+        return count($resources->data);
     }
 
     /**

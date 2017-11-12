@@ -1,0 +1,31 @@
+{
+   "id":"f40b0891-2077-4c23-a87f-b39e00b5cfe4",
+   "providerName":"My Test Application",
+   "dateTimeUTC":"2017-11-12T15:28:03.3952751",
+   "httpStatusCode":"OK",
+   "pagination":null,
+   "problem":null,
+   "employee":{
+      "employeeID":"85c94705-eaf8-463b-9a73-e1e26061a7f9",
+      "title":"Mr",
+      "firstName":"Employee-One",
+      "lastName":"Bloggs",
+      "dateOfBirth":"1960-01-01T00:00:00",
+      "gender":"M",
+      "email":null,
+      "startDate":"2017-10-01T00:00:00",
+      "nationalInsuranceNumber":null,
+      "address":{
+         "suite":null,
+         "addressLine1":"1 January Road",
+         "addressLine2":null,
+         "city":"Nineteen Sixtyham",
+         "suburb":null,
+         "county":null,
+         "stateName":null,
+         "countryName":null,
+         "postCode":"AA01 0AA"
+      },
+      "payRunCalendarID":"6e6b5103-e024-4be0-8d79-9f9e37b678ac"
+   }
+}
