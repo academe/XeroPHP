@@ -180,12 +180,15 @@ var_dump($result->pagination->toArray());
 // }
 ```
 
-The results object provides access structured data of resources fetched from the API.
+The results object provides access to structured data of resources fetched from the API.
 It is a value object, and does not provide any ORM-like functionality.
 
 Each `ResponseData` object can act as a single resource or an itterable collection of
-resources. The collection fucntionality is particularly fancy, but it has `first()`
-and `count()`, and will iterate over a `foreach` loop.
+resources. The collection functionality is not particularly fancy, but it has
+`count()`, and will iterate over a `foreach` loop.
+
+The root `ResponseData` object provides access to its collection of resources using
+`getResources()` and to its single resource using `getResource()`.
 
 An attempt is made to convert all dates and times to a `Carbon` datetime.
 Xero mixes quite a number of date formats across its APIs, so it is helpful to
