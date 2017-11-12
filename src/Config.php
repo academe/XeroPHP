@@ -57,7 +57,7 @@ class Config
 
     public function __construct(array $params = [])
     {
-        foreach($params as $name => $value) {
+        foreach ($params as $name => $value) {
             $this->set($name, $value);
         }
     }

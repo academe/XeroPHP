@@ -264,7 +264,7 @@ class API
     /**
      * Convert a snake_case string to camelCase.
      * Static helper method.
-     * 
+     *
      * @param string $name
      * @return string
      */

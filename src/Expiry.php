@@ -36,7 +36,7 @@ class Expiry
     public function __construct($data)
     {
 
-        foreach((array)$data as $key => $value) {
+        foreach ((array)$data as $key => $value) {
             $name = API::snakeToCamel($key);
 
             if ($name === 'oauthExpiresAt' || $name === 'expiresAt') {

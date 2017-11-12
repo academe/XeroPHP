@@ -375,7 +375,7 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
             case static::STRUCTURE_B:
             case static::STRUCTURE_C:
             case static::STRUCTURE_D:
-                foreach($this->items as $checkItem) {
+                foreach ($this->items as $checkItem) {
                     if ($checkItem instanceof self) {
                         if ($checkItem->name !== 'pagination' && $checkItem->name !== 'problem') {
                             $item = $checkItem;

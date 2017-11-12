@@ -57,7 +57,7 @@ class OAuthParams implements \JsonSerializable
      */
     public function __construct($data)
     {
-        foreach((array)$data as $name => $value) {
+        foreach ((array)$data as $name => $value) {
             $this->set($name, $value);
         }
 
