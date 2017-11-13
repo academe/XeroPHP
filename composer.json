@@ -19,7 +19,7 @@
     "suggest": {
         "thephpleague/oauth1-client": "Provides OAuth 1.0 authentication to your application",
         "invoiced/oauth1-xero": "Provides Xero-specific functionality to thephpleague/oauth1-client"
-    }
+    },
 
     "repositories": [
     ],
