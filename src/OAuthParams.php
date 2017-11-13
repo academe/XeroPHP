@@ -66,7 +66,7 @@ class OAuthParams implements \JsonSerializable
 
     public function get($name)
     {
-        $property = API::snakeToCamel($name);
+        $property = Helper::snakeToCamel($name);
         $getterName = 'get' . ucfirst($property);
 
         if (method_exists($this, $getterName)) {
@@ -80,7 +80,7 @@ class OAuthParams implements \JsonSerializable
 
     protected function set($name, $value)
     {
-        $property = API::snakeToCamel($name);
+        $property = Helper::snakeToCamel($name);
         $setterName = 'set' . ucfirst($property);
 
         if (method_exists($this, $setterName)) {
@@ -137,7 +137,7 @@ class OAuthParams implements \JsonSerializable
      */
     protected function setOauthExpiresAt($value)
     {
-        $this->params[static::OAUTH_EXPIRES_AT] = API::toCarbon($value);
+        $this->params[static::OAUTH_EXPIRES_AT] = Helper::toCarbon($value);
         return $this;
     }
 
@@ -166,7 +166,7 @@ class OAuthParams implements \JsonSerializable
      */
     protected function setCreatedAt($createdAtTime)
     {
-        $this->params[static::CREATED_AT] = API::toCarbon($createdAtTime);
+        $this->params[static::CREATED_AT] = Helper::toCarbon($createdAtTime);
         return $this;
     }
 

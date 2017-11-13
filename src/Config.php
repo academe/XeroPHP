@@ -64,7 +64,7 @@ class Config
 
     public function get($name)
     {
-        $property = API::snakeToCamel($name);
+        $property = Helper::snakeToCamel($name);
         $getterName = 'get' . ucfirst($property);
 
         if (method_exists($this, $getterName)) {
@@ -86,7 +86,7 @@ class Config
      */
     protected function set($name, $value)
     {
-        $property = API::snakeToCamel($name);
+        $property = Helper::snakeToCamel($name);
         $setterName = 'set' . ucfirst($property);
 
         if (method_exists($this, $setterName)) {

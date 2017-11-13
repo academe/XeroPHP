@@ -57,6 +57,11 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
      */
     protected $parent;
 
+    /**
+     * Cache the structure type for multiple access.
+     */
+    protected $typeCache;
+
     // Can be support other kinds of iterables?
     public function __construct(array $data = [], $name = null, self $parent = null)
     {
@@ -106,55 +111,25 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
         $lcName = strtolower($name);
 
         if (substr($lcName, -3) === 'utc') {
-            return $this->toDateTime($value);
+            return Helper::toCarbon($value);
         }
 
         if (substr($lcName, -8) === 'datetime') {
-            return $this->toDateTime($value);
+            return Helper::toCarbon($value);
         }
 
         if (substr($lcName, -4) === 'date') {
-            return $this->toDate($value);
+            return Helper::toCarbon($value);
         }
 
         return $value;
-    }
-
-    /**
-     * CHECKME: do we ever get a negative timezone offset?
-     * FIXME: the timezone offset may or may not be zero, so take it into account.
-     * Maybe the offsets need to be converted into a timezone name?
-     * TODO: merge this into API::toCarbon() helper
-     */
-    public function toDateTime($value)
-    {
-        if (substr($value, 0, 6) === '/Date(') {
-            if (strpos($value, '+') !== false) {
-                list($milli, $offset) = preg_replace('/[^0-9]/', '', explode('+', $value));
-            } else {
-                $milli = preg_replace('/[^0-9]/', '', $value);
-                $offset = '00000';
-            }
-
-            return Carbon::createFromTimestamp($milli / 1000);
-        }
-
-        // One last, clumsy check of the format before we try to convert it.
-        // We just look for the "-99T99:" second that is in the middle of all
-        // date formats we have encountered so far.
-        if (!preg_match('/\-[0-9]{2,2}T[0-9]{2,2}:/', $value)) {
-            return $value;
-        }
-
-        // This will work for most ISO datetime formats.
-        return Carbon::parse($value);
     }
 
     public function toDate($value)
     {
         // For now, return a DateTime Carbon object.
         // The time will be set to 00:00:00
-        return $this->toDateTime($value);
+        return Helper::toCarbon($value);
     }
 
     /**
@@ -446,48 +421,66 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
 
     /**
      * Determine what top-level data structure we have.
-     * Only relevant on the root level.
+     * Only relevant on the root level - or is it? Needs some tests.
      */
     public function getStructureType()
     {
-        if ($this->has('providerName')) {
-            if ($this->has('status')) {
-                return self::STRUCTURE_C; // Or D
-            }
+        if ($this->typeCache !== null) {
+            return $this->typeCache;
+        }
 
-            if ($this->has('httpStatusCode')) {
-                if (! $this->problem->isEmpty()) {
-                    return self::STRUCTURE_H;
+        // do-while structure being used like a "goto".
+        do {
+            if ($this->has('providerName')) {
+                if ($this->has('status')) {
+                    $this->typeCache = self::STRUCTURE_C; // Or D
+                    break;
                 }
 
-                if ($this->pagination->isEmpty()) {
-                    return self::STRUCTURE_A;
+                if ($this->has('httpStatusCode')) {
+                    if (! $this->problem->isEmpty()) {
+                        $this->typeCache = self::STRUCTURE_H;
+                        break;
+                    }
+
+                    if ($this->pagination->isEmpty()) {
+                        $this->typeCache = self::STRUCTURE_A;
+                    } else {
+                        $this->typeCache = self::STRUCTURE_B;
+                    }
+
+                    break;
+                }
+            }
+
+            if ($this->has('TotalCount') && $this->has('Items')) {
+                $this->typeCache = self::STRUCTURE_B;
+                break;
+            }
+
+            if ($this->isCollection()) {
+                $this->typeCache = self::STRUCTURE_E;
+                break;
+            }
+
+            if ($this->has('message')) {
+                if ($this->has('httpStatusCode')) {
+                    // Old format error of any type
+                    $this->typeCache = static::STRUCTURE_G;
                 } else {
-                    return self::STRUCTURE_B;
+                    // New format malformed request error
+                    $this->typeCache = static::STRUCTURE_G;
                 }
+
+                break;
             }
-        }
 
-        if ($this->has('TotalCount') && $this->has('Items')) {
-            return self::STRUCTURE_B;
-        }
-
-        if ($this->isCollection()) {
-            return self::STRUCTURE_E;
-        }
-
-        if ($this->has('message')) {
-            if ($this->has('httpStatusCode')) {
-                // Old format error of any type
-                return static::STRUCTURE_G;
-            } else {
-                // New format malformed request error
-                return static::STRUCTURE_G;
+            if ($this->isAssociative()) {
+                $this->typeCache = self::STRUCTURE_F;
+                break;
             }
-        }
+        } while (false);
 
-        if ($this->isAssociative()) {
-            return self::STRUCTURE_F;
-        }
+        return $this->typeCache;
     }
 }

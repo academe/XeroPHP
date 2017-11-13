@@ -47,7 +47,7 @@ at this stage.
 Quick Start
 -----------
 
-```php
+~~~php
 use use Academe\XeroPHP;
 
 // Most of the configuration goes into one place.
@@ -68,8 +68,12 @@ $config = new XeroPHP\Config([
         'private_key_passphrase' => 'your-optional-passphrase',
     ],
     'clientAdditional' => [
+        // You will almost always want exceptions off, so Guzzle does not throw an exception
+        // on every non-20x response.
+        'exceptions' => false,
         'headers' => [
             // We would like JSON back for most APIs, as it is structured nicely.
+            // Exceptions include 'application/pdf' to download or upload files.
             'Accept' => 'application/json',
         ],
     ],
@@ -148,10 +152,10 @@ $response = $refreshableClient->get($api->getGbPayrollAPI('payruns'), ['query' =
 
 
 // Assuming all is fine, parse the response to an array.
-$array = XeroPHP\API::parseResponse($response);
+$bodyArray = XeroPHP\Helper::parseResponse($response);
 
 // Instantiate the response data object.
-$result = new XeroPHP\ResponseData($array)
+$result = new XeroPHP\ResponseData($bodyArray);
 
 // Now we can navigate the data.
 echo $result->id;

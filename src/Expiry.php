@@ -37,7 +37,7 @@ class Expiry
     {
 
         foreach ((array)$data as $key => $value) {
-            $name = API::snakeToCamel($key);
+            $name = Helper::snakeToCamel($key);
 
             if ($name === 'oauthExpiresAt' || $name === 'expiresAt') {
                 $this->setOAuthExpiresAt($value);
@@ -60,7 +60,7 @@ class Expiry
      */
     protected function setOAuthExpiresAt($expiresAt)
     {
-        $this->oauth_expires_at = API::toCarbon($expiresAt);
+        $this->oauth_expires_at = Helper::toCarbon($expiresAt);
     }
 
     /**
@@ -68,7 +68,7 @@ class Expiry
      */
     protected function setOAuthCreatedAt($createdAt)
     {
-        $this->oauth_created_at = API::toCarbon($createdAt);
+        $this->oauth_created_at = Helper::toCarbon($createdAt);
     }
 
     /**
