@@ -14,7 +14,8 @@ This library tackles the following parts of Xero API access:
 * Automatically refreshing expired tokens (for Partner Applications).
 * Parsing the response into a generic nested object.
 
-This package leaves these functions for other packages to handle:
+This package leaves these functions for other packages to handle, thought
+does coordinate them:
 
 * All HTTP communications through [Guzzle 6]().
 * OAuth request signing to
@@ -22,10 +23,11 @@ This package leaves these functions for other packages to handle:
 * OAuth authentication recommended through
   [OAuth 1.0 Client](https://github.com/thephpleague/oauth1-client)
 * Xero provider for OAuth 1.0 Client recommended using
-  [Xero Provider for OAuth 1.0 Client](https://github.com/Invoiced/oauth1-xero)
-* Storage of the OAuth tokens to your own app.
-* Knowledge of how to navigate the results is left with your application,
-  thorugh the generic nested data object will help.
+  [Xero Provider for The PHP League OAuth 1.0 Client](https://github.com/Invoiced/oauth1-xero)
+* Storage of the OAuth tokens to your own application.
+  A hook is provided so that refreshed tokens can be updated in storage.
+* Knowledge of how to navigate the results is left with your application.
+  The generic nested data object helps to do this.
 
 This package needs the OAuth token and secret gained through authorisation
 to access the API, and the session handler token if automatic refreshing is
