@@ -31,9 +31,9 @@ class Helper
         }
 
         if (is_string($item)) {
-            // The Microsoft format date and datetime that some of the older APIs use.
-
             if (substr($item, 0, 6) === '/Date(') {
+                // The Microsoft format date and datetime that some of the older APIs use.
+
                 if (strpos($item, '+') !== false) {
                     list($milli, $offset) = preg_replace('/[^0-9]/', '', explode('+', $item));
                 } else {
@@ -47,7 +47,10 @@ class Helper
             // One last, clumsy check of the format before we try to convert it.
             // We just look for the "-99T99:" second that is in the middle of all
             // date formats we have encountered so far.
-            if (!preg_match('/\-[0-9]{2,2}T[0-9]{2,2}:/', $item)) {
+            // This check may have to gom as it throws out, for example, OAuth expiry
+            // times that may have been retrieved from the database as strings.
+
+            if (! preg_match('/\-[0-9]{2,2}T[0-9]{2,2}:/', $item)) {
                 return $item;
             }
 

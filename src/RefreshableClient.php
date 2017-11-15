@@ -109,11 +109,30 @@ class RefreshableClient
     /**
      * All synchronous requests with a refresh token (Xero Partner application)
      * divert through here.
+     *
+     * @param string $method GET, POST PUT, etc.
+     * @param string $uri The aobsolute URI or URI relative to the bas URI
+     * @paran array $optins Additional options to send to the Guzzle request
      */
     public function request($method, $uri = '', array $options = [])
     {
-        // Start by assuming the token has not expired yet.
+        // Start by assuming the token has not expired yet, hoping that the application
+        // has already checked its expiry time and renewed it as we approach that expiry time.
         $refreshRequired = false;
+
+        // This feels like a bit of a fudge; see https://github.com/academe/XeroPHP/issues/4
+        // If the ModifiedAfter GET parameter has been provided, then move it to the
+        // If-Modified-Since HTTP header.
+
+        if (! empty($options['query']) && ! empty($options['query']['modifiedAfter'])) {
+            if (! array_key_exists('headers', $options)) {
+                $options['headers'] = [];
+            }
+
+            // We will assume the format will be an acceptable ISO timestamp (many formats work).
+            $options['headers']['If-Modified-Since'] = (string)$options['query']['modifiedAfter'];
+            unset($options['query']['modifiedAfter']);
+        }
 
         try {
             $response = $this->client->request($method, $uri, $options);
