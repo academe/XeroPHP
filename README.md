@@ -299,6 +299,8 @@ Examples include fetching a single Payrun in the GB Payroll v2.0 API.
 
 ![[https://github.com/academe/XeroPHP/raw/master/docs/images/A.png|alt=Response Format A|width=270px]]
 
+<img src="https://github.com/academe/XeroPHP/raw/master/docs/images/A.png" alt="Response Format A" width="270">
+
 Other Notes
 -----------
 
