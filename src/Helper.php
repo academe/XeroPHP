@@ -6,6 +6,7 @@ namespace Academe\XeroPHP;
  * Static helper methods.
  */
 
+use Psr\Http\Message\ResponseInterface;
 use Carbon\Carbon;
 
 class Helper
@@ -89,7 +90,7 @@ class Helper
     /**
      * Parse an API response body into an array.
      */
-    public static function parseResponse($response)
+    public static function parseResponse(ResponseInterface $response)
     {
         // Strip off the character encoding, e.g. "application/json; charset=utf-8"
         list($contentType) = explode(';', $response->getHeaderLine('content-type'));
