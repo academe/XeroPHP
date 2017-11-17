@@ -297,7 +297,7 @@ We have given each structure an arbitrary letter to identify it, and listed them
 The resource is in a single node, usually named after the resource content, but not always.
 Examples include fetching a single Payrun in the GB Payroll v2.0 API.
 
-
+[[https://github.com/academe/XeroPHP/raw/master/docs/images/A.png|alt=Response Format A|width=270px]]
 
 Other Notes
 -----------
