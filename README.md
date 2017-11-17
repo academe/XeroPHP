@@ -286,6 +286,19 @@ The places where error details cna be found are:
   The `OAuthParams` class can parse these details and provide some interpretation.
 * Request construction errors are returned TBC
 
+Response Structures
+-------------------
+
+Each response will be in one of a number of structures.
+We have given each structure an arbitrary letter to identify it, and listed them below.
+
+### A: Single metadata header; single resource
+
+The resource is in a single node, usually named after the resource content, but not always.
+Examples include fetching a single Payrun in the GB Payroll v2.0 API.
+
+
+
 Other Notes
 -----------
 
