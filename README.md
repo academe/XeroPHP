@@ -297,9 +297,51 @@ We have given each structure an arbitrary letter to identify it, and listed them
 The resource is in a single node, usually named after the resource content, but not always.
 Examples include fetching a single Payrun in the GB Payroll v2.0 API.
 
-![[https://github.com/academe/XeroPHP/raw/master/docs/images/A.png|alt=Response Format A|width=270px]]
-
 <img src="https://github.com/academe/XeroPHP/raw/master/docs/images/A.png" alt="Response Format A" width="270">
+
+### B: Single metadata header; collection of resources
+
+The resources are in an array under a single node, usually named after the resource content, but not always.
+Examples include fetching a multiple Payruns in the GB Payroll v2.0 API.
+Paging metadata is in an object of its own.
+
+<img src="https://github.com/academe/XeroPHP/raw/master/docs/images/B.png" alt="Response Format B" width="270">
+
+### C: Single metadata header; collection of a single resource
+
+Some APIs will return both a single resource and multiple resources in an array, with no paging metdata.
+Distinguishing between the response to requesting a single resource, or matching a single resource in
+a resource collection, is not possible; the response looks the same withou looking at more details of the
+content of the resource.
+Examples include fetching a single payment from the Accounting v2.0 API.
+
+<img src="https://github.com/academe/XeroPHP/raw/master/docs/images/C.png" alt="Response Format C" width="270">
+
+### D: Single metadata header; collection of resources
+
+This structure includes some metadata at the root node, including paging details that are not
+wrapped into an object.
+Examples include fetching a multiple files from the Files v1.0 API.
+
+<img src="https://github.com/academe/XeroPHP/raw/master/docs/images/D.png" alt="Response Format D" width="270">
+
+### E: Array of resources
+
+Some APIs will return an array of resources with no metadata at all, no paging details, no source details.
+
+<img src="https://github.com/academe/XeroPHP/raw/master/docs/images/E.png" alt="Response Format E" width="270">
+
+### F: Single resources
+
+Similar to format E, the response contains a single resource, not wrapped into a field or object,
+and with no metadata to provide context.
+
+<img src="https://github.com/academe/XeroPHP/raw/master/docs/images/F.png" alt="Response Format F" width="270">
+
+There are a number of different formats used to deliver error messages and exceptions (at least four different
+structures). These will be documented shortly, as they need to be handled using the same rules.
+
+I suspect at least two of these stcutures can be merged into one.
 
 Other Notes
 -----------
