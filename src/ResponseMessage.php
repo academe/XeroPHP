@@ -12,7 +12,7 @@ use Psr\Http\Message\ResponseInterface;
 use Carbon\Carbon;
 use InvalidArgumentException;
 
-class ResponseMessage //implements \JsonSerializable, \Iterator, \Countable
+class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
 {
     // New format single resource with header.
     const STRUCTURE_A = 'A';
@@ -47,6 +47,17 @@ class ResponseMessage //implements \JsonSerializable, \Iterator, \Countable
     protected $index = [];
 
     /**
+     * A single resource, which could be a collection of resources.
+     */
+    protected $resource;
+
+    /**
+     * For interface Iterator
+     * Interator current pointer.
+     */
+    protected $iteratorPosition = 0;
+
+    /**
      *
      */
     public function __construct($data)
@@ -67,6 +78,7 @@ class ResponseMessage //implements \JsonSerializable, \Iterator, \Countable
         $this->sourceData = $data;
 
         // Create an index to help check fields in a case-insensitive way.
+        // Should we do this while parsing?
 
         foreach ($this->sourceData as $key => $value) {
             $this->index[strtolower($key)] = $key;
@@ -75,6 +87,61 @@ class ResponseMessage //implements \JsonSerializable, \Iterator, \Countable
         // We now want to determine the data structure, extract the resource or
         // resources and put them where they belong, and extract the metadata and
         // put that where it belongs.
+
+        $this->parseSourceData();
+    }
+
+    /**
+     * Parse the data we have been given.
+     */
+    protected function parseSourceData()
+    {
+        // An empty dataset has been provided.
+
+        if (empty($this->sourceData)) {
+            return;
+        }
+
+        // An numeric-keyed array at the root will be a collection of resources.
+
+        if (Helper::isNumericArray($this->sourceData)) {
+            $this->resource = new ResourceCollection($this->sourceData);
+            return;
+        }
+
+/*
+        do {
+            if ($this->hasSourceField('providerName')) {
+                if ($this->hasSourceField('status')) {
+                    //$this->dataStructureCache = self::STRUCTURE_C; // Or D
+                    break;
+                }
+
+                if ($this->hasSourceField('httpStatusCode')) {
+                    if ($this->getSourceField('problem') === null) {
+                        //$this->dataStructureCache = self::STRUCTURE_H;
+                        break;
+                    }
+
+                    if ($this->getSourceField('pagination') === null) {
+                        $this->dataStructureCache = self::STRUCTURE_A;
+                    } else {
+                        $this->dataStructureCache = self::STRUCTURE_B;
+                    }
+
+                    break;
+                }
+            }
+        } while (false);
+*/
+    }
+
+    /**
+     * The data provided is empty - no resource, no resource list and no metadata.
+     */
+    public function isEmpty()
+    {
+        return empty($this->sourceData);
     }
 
     /**
@@ -119,28 +186,6 @@ class ResponseMessage //implements \JsonSerializable, \Iterator, \Countable
 
         // do-while structure being used like a "goto".
         do {
-            if ($this->hasSourceField('providerName')) {
-                if ($this->hasSourceField('status')) {
-                    $this->dataStructureCache = self::STRUCTURE_C; // Or D
-                    break;
-                }
-
-                if ($this->hasSourceField('httpStatusCode')) {
-                    if ($this->getSourceField('problem') === null) {
-                        $this->dataStructureCache = self::STRUCTURE_H;
-                        break;
-                    }
-
-                    if ($this->getSourceField('pagination') === null) {
-                        $this->dataStructureCache = self::STRUCTURE_A;
-                    } else {
-                        $this->dataStructureCache = self::STRUCTURE_B;
-                    }
-
-                    break;
-                }
-            }
-
             if ($this->hasSourceField('TotalCount') && $this->hasSourceField('Items')) {
                 $this->dataStructureCache = self::STRUCTURE_B;
                 break;
@@ -172,5 +217,72 @@ class ResponseMessage //implements \JsonSerializable, \Iterator, \Countable
         } while (false);
 
         return $this->dataStructureCache;
+    }
+
+
+    /**
+     * For interface Iterator
+     */
+    public function rewind()
+    {
+        $this->iteratorPosition = 0;
+    }
+
+    /**
+     * For interface Iterator
+     */
+    public function current()
+    {
+        // If an array, then return the items in the current position,
+        // otherwise return the complete items array as a single (and only)
+        // element.
+
+        //if ($this->isCollection()) {
+        //    return $this->items[$this->iteratorPosition];
+        //} else {
+        //    return $this->items;
+        //}
+    }
+
+    /**
+     * For interface Iterator
+     */
+    public function key()
+    {
+        return $this->iteratorPosition;
+    }
+
+    /**
+     * For interface Iterator
+     */
+    public function next()
+    {
+        $this->iteratorPosition++;
+    }
+
+    /**
+     * For interface Iterator
+     */
+    public function valid()
+    {
+        //if ($this->isCollection()) {
+        //    return isset($this->items[$this->iteratorPosition]);
+        //} else {
+        //    return ($this->iteratorPosition === 0);
+        //}
+    }
+
+    /**
+     * For interface Countable.
+     * The data provided is empty - no resource, no resource list and no metadata.
+     */
+    public function count()
+    {
+        if ($this->isEmpty()) {
+            return 0;
+        }
+
+        // TODO: if a collection, then get the count of resources fetched so far.
+        // TODO: if a resource then the count will be 1.
     }
 }

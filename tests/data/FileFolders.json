@@ -1,0 +1,15 @@
+[
+   {
+      "Name":"Inbox",
+      "FileCount":0,
+      "Email":"xero.inbox.j5tzx.k74mw3opincu1xx7@xerofiles.com",
+      "IsInbox":true,
+      "Id":"01ddebbc-3b15-49af-a2e0-24fabc3a2acf"
+   },
+   {
+      "Name":"Contracts",
+      "FileCount":0,
+      "IsInbox":false,
+      "Id":"8ace0a89-5779-cc67-b24e-504351cba4f2"
+   }
+]

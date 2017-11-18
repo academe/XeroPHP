@@ -237,7 +237,7 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
     }
 
     /**
-     * @return bool true if the source data is an associative array; an object
+     * @return bool true if the source data is an associative array.
      */
     public function isAssociative()
     {

@@ -88,6 +88,26 @@ class Helper
     }
 
     /**
+     * @return bool true if the data is an associative array.
+     */
+    public static function isAssociativeArray(array $data)
+    {
+        return count(
+            array_filter(array_keys($data), 'is_string')
+        ) > 0;
+    }
+
+    /**
+     * @return bool true if the data is a numeric keyed array.
+     */
+    public static function isNumericArray(array $data)
+    {
+        return count(
+            array_filter(array_keys($data), 'is_numeric')
+        ) > 0;
+    }
+
+    /**
      * Parse an API response body into an array.
      */
     public static function parseResponse(ResponseInterface $response)
