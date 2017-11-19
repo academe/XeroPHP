@@ -102,38 +102,13 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
             return;
         }
 
-        // An numeric-keyed array at the root will be a collection of resources.
+        // An numeric-keyed array at the root will be a collection of resources
+        // with no metadata to describe them.
 
         if (Helper::isNumericArray($this->sourceData)) {
-            $this->resource = new ResourceCollection($this->sourceData);
+            $this->resource = Helper::responseFactory($this->sourceData);
             return;
         }
-
-/*
-        do {
-            if ($this->hasSourceField('providerName')) {
-                if ($this->hasSourceField('status')) {
-                    //$this->dataStructureCache = self::STRUCTURE_C; // Or D
-                    break;
-                }
-
-                if ($this->hasSourceField('httpStatusCode')) {
-                    if ($this->getSourceField('problem') === null) {
-                        //$this->dataStructureCache = self::STRUCTURE_H;
-                        break;
-                    }
-
-                    if ($this->getSourceField('pagination') === null) {
-                        $this->dataStructureCache = self::STRUCTURE_A;
-                    } else {
-                        $this->dataStructureCache = self::STRUCTURE_B;
-                    }
-
-                    break;
-                }
-            }
-        } while (false);
-*/
     }
 
     /**
@@ -273,6 +248,22 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
     }
 
     /**
+     * @return bool True if the response contains a collection of resources.
+     */
+    public function isCollection()
+    {
+        return $this->resource instanceof ResourceCollection;
+    }
+
+    /**
+     * @return bool True if the response contains a single resources.
+     */
+    public function isResource()
+    {
+        return $this->resource instanceof Resource;
+    }
+
+    /**
      * For interface Countable.
      * The data provided is empty - no resource, no resource list and no metadata.
      */
@@ -282,7 +273,34 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
             return 0;
         }
 
-        // TODO: if a collection, then get the count of resources fetched so far.
-        // TODO: if a resource then the count will be 1.
+        // If a collection, then get the count of resources fetched so far.
+
+        if ($this->isCollection()) {
+            return count($this->resource);
+        }
+
+        // If a resource then the count will be 1.
+        if ($this->isResource()) {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    /**
+     * Get the collection of resources.
+     * @return ResourceCollection
+     */
+    public function getCollection()
+    {
+        if ($this->isCollection()) {
+            return $this->resource;
+        }
+
+        if ($this->isResource()) {
+            return new ResourceCollection([$this->resource]);
+        }
+
+        return new ResourceCollection();
     }
 }

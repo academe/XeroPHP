@@ -163,4 +163,45 @@ class Helper
 
         return $data;
     }
+
+    /**
+     * Parse a data item.
+     *
+     * @parem mixed $data
+     * @return mixed Return Collection, Resource, Carbon or scalar value
+     */
+    public static function responseFactory($data, $name = '')
+    {
+        // Check for a date format first.
+
+        if (is_string($data) && $name) {
+            $lcName = strtolower($name);
+
+            if (substr($lcName, -3) === 'utc') {
+                $data = static::toCarbon($data);
+            }
+
+            if (substr($lcName, -8) === 'datetime') {
+                $data = static::toCarbon($data);
+            }
+
+            if (substr($lcName, -4) === 'date') {
+                $data = static::toCarbon($data);
+            }
+        }
+
+        if (is_scalar($data)) {
+            return $data;
+        }
+
+        if (is_array($data) && static::isNumericArray($data)) {
+            return new ResourceCollection($data);
+        }
+
+        if (is_array($data) && static::isAssociativeArray($data)) {
+            return new Resource($data);
+        }
+
+        return $data;
+    }
 }

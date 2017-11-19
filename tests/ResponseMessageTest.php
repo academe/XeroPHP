@@ -88,7 +88,10 @@ class ResponseMessageTest extends TestCase
         $message = new ResponseMessage([]);
 
         $this->assertEquals($message->getSource(), []);
+
         $this->assertSame($message->isEmpty(), true);
+        $this->assertSame($message->isCollection(), false);
+        $this->assertSame($message->isResource(), false);
 
         $this->assertSame($message->count(), 0);
         $this->assertSame(count($message), 0);
@@ -96,6 +99,11 @@ class ResponseMessageTest extends TestCase
         foreach($message as $key => $value) {
             $this->fail('Iterator still loops over empty array');
         }
+
+        $collection = $message->getCollection();
+
+        $this->assertSame($collection->count(), 0);
+        $this->assertSame(count($collection), 0);
     }
 
     /**
@@ -106,6 +114,22 @@ class ResponseMessageTest extends TestCase
     {
         $message = $this->fileFolders;
 
-        //$this->assertEquals($message->getSource(), $fileFolders);
+        $this->assertSame($message->isEmpty(), false);
+        $this->assertSame($message->isCollection(), true);
+        $this->assertSame($message->isResource(), false);
+
+        $this->assertSame($message->count(), 2);
+        $this->assertSame(count($message), 2);
+
+        $collection = $message->getCollection();
+
+        $this->assertSame($collection->count(), 2);
+        $this->assertSame(count($collection), 2);
+
+        // TODO: test looping over the message response performs the loop
+        // over the resource collection.
+
+        foreach($message as $key => $value) {
+        }
     }
 }
