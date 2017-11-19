@@ -6,7 +6,7 @@ namespace Academe\XeroPHP;
  * Collecton of resources.
  */
 
-use Exception;
+use InvalidArgumentException;
 
 class ResourceCollection implements \Countable, \Iterator  //\JsonSerializable
 {
@@ -31,8 +31,8 @@ class ResourceCollection implements \Countable, \Iterator  //\JsonSerializable
             // Scalars are not allowed, from what I have seen.
             // We may find an exception, but will run with this rule for now.
 
-            if (is_scalar($data)) {
-                throw new Exception(sprintf(
+            if (is_scalar($item)) {
+                throw new InvalidArgumentException(sprintf(
                     'ResourceCollection given a scalar "%s"=>"%s" as a resource; not permitted',
                     $key,
                     gettype($item)
@@ -41,6 +41,17 @@ class ResourceCollection implements \Countable, \Iterator  //\JsonSerializable
 
             $this->items[] = Helper::responseFactory($item);
         }
+    }
+
+    /**
+     * Return the first resource in the collection.
+     *
+     * @return mixed the first resource in the collection, or null if the collection is empty.
+     */
+    public function first()
+    {
+        $this->rewind();
+        return $this->current();
     }
 
     /**
@@ -89,6 +100,10 @@ class ResourceCollection implements \Countable, \Iterator  //\JsonSerializable
      */
     public function current()
     {
+        if (! $this->valid()) {
+            return null;
+        }
+
         return $this->items[$this->iteratorPosition];
     }
 }

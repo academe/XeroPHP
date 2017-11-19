@@ -37,11 +37,6 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
     protected $sourceData = [];
 
     /**
-     * Cache the structure type for multiple access.
-     */
-    protected $dataStructureCache;
-
-    /**
      * Lower-case mapping of field names to provide case-insensitive search.
      */
     protected $index = [];
@@ -77,13 +72,6 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
 
         $this->sourceData = $data;
 
-        // Create an index to help check fields in a case-insensitive way.
-        // Should we do this while parsing?
-
-        foreach ($this->sourceData as $key => $value) {
-            $this->index[strtolower($key)] = $key;
-        }
-
         // We now want to determine the data structure, extract the resource or
         // resources and put them where they belong, and extract the metadata and
         // put that where it belongs.
@@ -102,10 +90,26 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
             return;
         }
 
+        // Create an index to help check fields in a case-insensitive way.
+        // Should we do this while parsing?
+
+        foreach ($this->sourceData as $key => $value) {
+            $this->index[strtolower($key)] = $key;
+        }
+
         // An numeric-keyed array at the root will be a collection of resources
         // with no metadata to describe them.
 
         if (Helper::isNumericArray($this->sourceData)) {
+            $this->resource = Helper::responseFactory($this->sourceData);
+            return;
+        }
+
+        // TODO: here look for various structures.
+
+        // Fallback - just a single resource on its own.
+
+        if (Helper::isAssociativeArray($this->sourceData)) {
             $this->resource = Helper::responseFactory($this->sourceData);
             return;
         }
@@ -268,5 +272,24 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
         }
 
         return new ResourceCollection();
+    }
+
+
+    /**
+     * Get the single resource, or the first resource if there are many.
+     * Return an empty resource if there are none
+     * @return Resource
+     */
+    public function getResource()
+    {
+        if ($this->isResource()) {
+            return $this->resource;
+        }
+
+        if ($this->isCollection()) {
+            return $this->resource->first();
+        }
+
+        return new Resource();
     }
 }

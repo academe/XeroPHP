@@ -13,6 +13,7 @@ class ResponseMessageTest extends TestCase
     protected $accountingPayment;
     protected $accountingPaymentsNoMatch;
     protected $fileFolders;
+    protected $fileFolder;
 
     /**
      * TODO: 404 from Accounting API.
@@ -43,6 +44,10 @@ class ResponseMessageTest extends TestCase
         // Two folders from the Files API v1.0.
         $fileFolders = json_decode(file_get_contents(__DIR__ . '/data/FileFolders.json'), true);
         $this->fileFolders = new ResponseMessage($fileFolders);
+
+        // Single folder selected from the Files API v1.0.
+        $fileFolder = json_decode(file_get_contents(__DIR__ . '/data/FileFolder.json'), true);
+        $this->fileFolder = new ResponseMessage($fileFolder);
     }
 
     /**
@@ -110,7 +115,7 @@ class ResponseMessageTest extends TestCase
      * The response types that contain a simple array of resources
      * with no metadata.
      */
-    public function testNakedArray()
+    public function testNakedResourcesArray()
     {
         $message = $this->fileFolders;
 
@@ -158,5 +163,27 @@ class ResponseMessageTest extends TestCase
             }
         }
         $this->assertSame($found, 2);
+
+        $resource = $message->getResource();
+    }
+
+    /**
+     * The response types that contain a simple array of resources
+     * with no metadata.
+     */
+    public function testNakedResource()
+    {
+        $message = $this->fileFolder;
+
+        $this->assertSame($message->isEmpty(), false);
+        $this->assertSame($message->isCollection(), false);
+        $this->assertSame($message->isResource(), true);
+
+        $this->assertSame($message->count(), 1);
+        $this->assertSame(count($message), 1);
+
+        $resource = $message->getResource();
+
+        $this->assertSame($resource->name, 'Inbox');
     }
 }

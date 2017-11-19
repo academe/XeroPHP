@@ -197,8 +197,12 @@ class Helper
         if (is_array($data) && static::isNumericArray($data)) {
             return new ResourceCollection($data);
         }
-
         if (is_array($data) && static::isAssociativeArray($data)) {
+            // TODO: look for various metadata/resource/collection structures.
+            // ...
+            // ...or is that only needed at the root class?
+
+            // Fallback, most likely just a single resource.
             return new Resource($data);
         }
 
