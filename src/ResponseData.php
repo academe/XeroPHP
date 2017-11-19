@@ -48,7 +48,7 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
     protected $items = [];
 
     /**
-     * Interator current pointer.
+     * Iterator current pointer.
      */
     protected $iteratorPosition = 0;
 

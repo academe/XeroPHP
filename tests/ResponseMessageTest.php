@@ -121,15 +121,42 @@ class ResponseMessageTest extends TestCase
         $this->assertSame($message->count(), 2);
         $this->assertSame(count($message), 2);
 
+        // Test looping over the message response performs the loop
+        // over the resource collection.
+
+        $found = 0;
+        foreach($message as $key => $item) {
+            if ($key === 0) {
+                $this->assertSame($item->name, 'Inbox');
+                $found++;
+            }
+
+            if ($key === 1) {
+                $this->assertSame($item->name, 'Contracts');
+                $found++;
+            }
+        }
+        $this->assertSame($found, 2);
+
         $collection = $message->getCollection();
 
         $this->assertSame($collection->count(), 2);
         $this->assertSame(count($collection), 2);
 
-        // TODO: test looping over the message response performs the loop
-        // over the resource collection.
+        // Test looping over the fetched resource collection direwctly.
 
-        foreach($message as $key => $value) {
+        $found = 0;
+        foreach($collection as $key => $item) {
+            if ($key === 0) {
+                $this->assertSame($item->name, 'Inbox');
+                $found++;
+            }
+
+            if ($key === 1) {
+                $this->assertSame($item->name, 'Contracts');
+                $found++;
+            }
         }
+        $this->assertSame($found, 2);
     }
 }

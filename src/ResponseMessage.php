@@ -148,59 +148,17 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
     }
 
     /**
-     * Determine what data structure we have.
-     * See notes below: this may be the wrong approach.
-     *
-     * $return string one of self::STRUCTURE_?
-     */
-    public function getStructureType()
-    {
-        if ($this->dataStructureCache !== null) {
-            return $this->dataStructureCache;
-        }
-
-        // do-while structure being used like a "goto".
-        do {
-            if ($this->hasSourceField('TotalCount') && $this->hasSourceField('Items')) {
-                $this->dataStructureCache = self::STRUCTURE_B;
-                break;
-            }
-
-// This is a kind of chicken and egg thing. Perhaps we don't need to know the format,
-// but we just parse it all as we go along?
-//            if ($this->isCollection()) {
-//                $this->dataStructureCache = self::STRUCTURE_E;
-//                break;
-//            }
-
-            if ($this->hasSourceField('message')) {
-                if ($this->hasSourceField('httpStatusCode')) {
-                    // Old format error of any type
-                    $this->dataStructureCache = static::STRUCTURE_G;
-                } else {
-                    // New format malformed request error
-                    $this->dataStructureCache = static::STRUCTURE_G;
-                }
-
-                break;
-            }
-
-//            if ($this->isAssociative()) {
-//                $this->dataStructureCache = self::STRUCTURE_F;
-//                break;
-//            }
-        } while (false);
-
-        return $this->dataStructureCache;
-    }
-
-
-    /**
      * For interface Iterator
      */
     public function rewind()
     {
-        $this->iteratorPosition = 0;
+        if ($this->isCollection()) {
+            $this->resource->rewind();
+        }
+
+        if ($this->isResource()) {
+            $this->iteratorPosition = 0;
+        }
     }
 
     /**
@@ -208,15 +166,13 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
      */
     public function current()
     {
-        // If an array, then return the items in the current position,
-        // otherwise return the complete items array as a single (and only)
-        // element.
+        if ($this->isCollection()) {
+            return $this->resource->current();
+        }
 
-        //if ($this->isCollection()) {
-        //    return $this->items[$this->iteratorPosition];
-        //} else {
-        //    return $this->items;
-        //}
+        if ($this->isResource()) {
+            return $this->resource;
+        }
     }
 
     /**
@@ -224,7 +180,13 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
      */
     public function key()
     {
-        return $this->iteratorPosition;
+        if ($this->isCollection()) {
+            return $this->resource->key();
+        }
+
+        if ($this->isResource()) {
+            return $this->iteratorPosition;
+        }
     }
 
     /**
@@ -232,7 +194,13 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
      */
     public function next()
     {
-        $this->iteratorPosition++;
+        if ($this->isCollection()) {
+            return $this->resource->next();
+        }
+
+        if ($this->isResource()) {
+            $this->iteratorPosition++;
+        }
     }
 
     /**
@@ -240,11 +208,13 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
      */
     public function valid()
     {
-        //if ($this->isCollection()) {
-        //    return isset($this->items[$this->iteratorPosition]);
-        //} else {
-        //    return ($this->iteratorPosition === 0);
-        //}
+        if ($this->isCollection()) {
+            return $this->resource->valid();
+        }
+
+        if ($this->isResource()) {
+            return $this->iteratorPosition === 0;
+        }
     }
 
     /**
@@ -269,10 +239,6 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
      */
     public function count()
     {
-        if ($this->isEmpty()) {
-            return 0;
-        }
-
         // If a collection, then get the count of resources fetched so far.
 
         if ($this->isCollection()) {

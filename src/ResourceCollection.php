@@ -8,12 +8,17 @@ namespace Academe\XeroPHP;
 
 use Exception;
 
-class ResourceCollection implements \Countable //\Iterator,  //\JsonSerializable
+class ResourceCollection implements \Countable, \Iterator  //\JsonSerializable
 {
     /**
      * The collection of resources.
      */
     protected $items = [];
+
+    /**
+     * Iterator current pointer.
+     */
+    protected $iteratorPosition = 0;
 
     /**
      * Parse each resource in the array.
@@ -45,5 +50,45 @@ class ResourceCollection implements \Countable //\Iterator,  //\JsonSerializable
     public function count()
     {
         return count($this->items);
+    }
+
+    /**
+     * For interface Iterator
+     */
+    public function rewind()
+    {
+        $this->iteratorPosition = 0;
+    }
+
+    /**
+     * For interface Iterator
+     */
+    public function key()
+    {
+        return $this->iteratorPosition;
+    }
+
+    /**
+     * For interface Iterator
+     */
+    public function next()
+    {
+        $this->iteratorPosition++;
+    }
+
+    /**
+     * For interface Iterator
+     */
+    public function valid()
+    {
+        return array_key_exists($this->iteratorPosition, $this->items);
+    }
+
+    /**
+     * For interface Iterator
+     */
+    public function current()
+    {
+        return $this->items[$this->iteratorPosition];
     }
 }
