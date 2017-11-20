@@ -8,7 +8,7 @@ namespace Academe\XeroPHP;
 
 use Exception;
 
-class Resource implements \Countable //\Iterator,  //\JsonSerializable
+class Resource implements \Countable, \JsonSerializable //\Iterator,
 {
     /**
      *
@@ -73,6 +73,34 @@ class Resource implements \Countable //\Iterator,  //\JsonSerializable
     {
         // The index alone has everything we need.
         return array_key_exists(strtolower($name), $this->index);
+    }
+
+    /**
+     * For interface \JsonSerializable
+     */
+    public function jsonSerialize()
+    {
+        return $this->toArray();
+    }
+
+    /**
+     * Convert the Resource and ResourceCollection objects into arrays.
+     */
+    public function toArray()
+    {
+        $array = [];
+
+        foreach ($this->properties as $name => $item) {
+            if ($item instanceof Resource || $item instanceof ResourceCollection) {
+                $array[$name] = $item->toArray();
+                continue;
+            }
+
+            // A scalar or another type of object.
+            $array[$name] = $item;
+        }
+
+        return $array;
     }
 
     /**

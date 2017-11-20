@@ -12,7 +12,7 @@ use Psr\Http\Message\ResponseInterface;
 use Carbon\Carbon;
 use InvalidArgumentException;
 
-class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
+class ResponseMessage implements \Iterator, \Countable, \JsonSerializable
 {
     /**
      * @var array The source data.
@@ -82,6 +82,32 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
     {
         // The index alone has everything we need.
         return array_key_exists(strtolower($name), $this->index);
+    }
+
+    /**
+     *
+     */
+    public function toArray()
+    {
+        $array = [
+            'pagination' => $this->getPagination()->toArray(),
+            'metadata' => $this->getMetadata()->toArray(),
+            // TODO: errors and exceptions
+        ];
+
+        if ($this->isCollection()) {
+            $array['resources'] = $this->getCollection()->toArray();
+        }
+
+        return $array;
+    }
+
+    /**
+     * For interface \JsonSerializable
+     */
+    public function jsonSerialize()
+    {
+        return $this->toArray();
     }
 
     /**
@@ -169,13 +195,18 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
                     if ($this->has('pagination')) {
                         if (isset($this->pagination)) {
                             // A multi-resource collection with a pagination object.
+                            // TODO: test an empty collection is created for no matches.
+                            // e.g. is the resource field ever simply not returned, or returned
+                            // as a null instead of an empty array?
+
                             if ($resourceName) {
                                 $this->resource = new ResourceCollection($this->sourceData[$resourceName]);
                                 break;
                             }
                         } else {
                             // A single resource (signalled by an empty pagination).
-                            // TODO: an empty pagination could also be a 404 error.
+                            // TODO: an empty pagination could also be a 404 response.
+
                             if ($resourceName) {
                                 $this->resource = new Resource($this->sourceData[$resourceName]);
                                 break;

@@ -8,7 +8,7 @@ namespace Academe\XeroPHP;
 
 use InvalidArgumentException;
 
-class ResourceCollection implements \Countable, \Iterator  //\JsonSerializable
+class ResourceCollection implements \Countable, \Iterator, \JsonSerializable
 {
     /**
      * The collection of resources.
@@ -60,6 +60,28 @@ class ResourceCollection implements \Countable, \Iterator  //\JsonSerializable
     public function isEmpty()
     {
         return count($this->items) === 0;
+    }
+
+    /**
+     *
+     */
+    public function toArray()
+    {
+        $array = [];
+
+        foreach ($this->items as $item) {
+            $array[] = $item->toArray();
+        }
+
+        return $array;
+    }
+
+    /**
+     * For interface \JsonSerializable
+     */
+    public function jsonSerialize()
+    {
+        return $this->toArray();
     }
 
     /**
