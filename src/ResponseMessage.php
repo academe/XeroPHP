@@ -14,23 +14,6 @@ use InvalidArgumentException;
 
 class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
 {
-    // New format single resource with header.
-    const STRUCTURE_A = 'A';
-    // New format resource list with header
-    // Files resource list
-    const STRUCTURE_B = 'B';
-    const STRUCTURE_C = 'C';
-    const STRUCTURE_D = 'D';
-    // Collection of resources with no header
-    // Old format resource list (can be just a single resource)
-    const STRUCTURE_E = 'E';
-    // Single resource with no wrapper
-    const STRUCTURE_F = 'F';
-    // Simple error message.
-    const STRUCTURE_G = 'G';
-    // New format structure error detail.
-    const STRUCTURE_H = 'H';
-
     /**
      * @var array The source data.
      */
@@ -45,6 +28,16 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
      * A single resource, which could be a collection of resources.
      */
     protected $resource;
+
+    /**
+     * @var Resource The pagination object.
+     */
+    protected $paginationResource;
+
+    /**
+     * @var Resource The non-pagination, non-error and non-resource details.
+     */
+    protected $metadataResource;
 
     /**
      * For interface Iterator
@@ -80,6 +73,27 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
     }
 
     /**
+     * Check if a field has been provided by the API.
+     *
+     * @param string $name The name of the field.
+     * @return bool true if the item was provided, even if it was null.
+     */
+    public function has($name)
+    {
+        // The index alone has everything we need.
+        return array_key_exists(strtolower($name), $this->index);
+    }
+
+    /**
+     * @param string $name The name of the field.
+     * @return bool True if a data field was supplied and is not null.
+     */
+    public function __isset($name)
+    {
+        return $this->has($name) && isset($this->sourceData[$this->index[strtolower($name)]]);
+    }
+
+    /**
      * Parse the data we have been given.
      */
     protected function parseSourceData()
@@ -97,22 +111,161 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
             $this->index[strtolower($key)] = $key;
         }
 
-        // An numeric-keyed array at the root will be a collection of resources
-        // with no metadata to describe them.
+        $hasMetadata = false;
 
-        if (Helper::isNumericArray($this->sourceData)) {
-            $this->resource = Helper::responseFactory($this->sourceData);
-            return;
+        // TODO: think the pagination through a little more, expecially wrt single resources.
+
+        if ($this->has('pagination')) {
+            if (isset($this->pagination)) {
+                // TODO: some endpoints put the pagination fields at the root.
+                $pagination = $this->getSourceField('pagination');
+                $paginationData = [
+                    // TODO: some endpoints provide different pagination field names.
+                    'page' => isset($pagination['page']) ? $pagination['page'] : -1,
+                    'pageSize' => isset($pagination['pageSize']) ? $pagination['pageSize'] : 100,
+                    'pageCount' => isset($pagination['pageCount']) ? $pagination['pageCount'] : -1,
+                    'itemCount' => isset($pagination['itemCount']) ? $pagination['itemCount'] : -1,
+                ];
+            } else {
+                // An empty pagination field means either one resource or there was an error.
+                // We'll go for one pagination field and fix for errors later.
+                $paginationData = [
+                    'page' => 1,
+                    'pageSize' => 100,
+                    'pageCount' => 1,
+                    'itemCount' => 1,
+                ];
+            }
+        } else {
+            // No pagination field at all, so pagination details are largely unknown.
+            $paginationData = [
+                'page' => -1,
+                'pageSize' => 100,
+                'pageCount' => -1,
+                'itemCount' => -1,
+            ];
         }
 
-        // TODO: here look for various structures.
+        $this->paginationResource = new Resource($paginationData);
 
-        // Fallback - just a single resource on its own.
+        $resourceName = null;
 
-        if (Helper::isAssociativeArray($this->sourceData)) {
-            $this->resource = Helper::responseFactory($this->sourceData);
-            return;
+        do {
+            // An numeric-keyed array at the root will be a collection of resources
+            // with no metadata to describe them.
+
+            if (Helper::isNumericArray($this->sourceData)) {
+                $this->resource = new ResourceCollection($this->sourceData);
+                break;
+            }
+
+            if ($this->has('providerName')) {
+                $hasMetadata = true;
+
+                // Locate the resource array.
+                $resourceName = $this->findResourceField();
+
+                if ($this->has('httpStatusCode')) {
+                    if ($this->has('pagination')) {
+                        if (isset($this->pagination)) {
+                            // A multi-resource collection with a pagination object.
+                            if ($resourceName) {
+                                $this->resource = new ResourceCollection($this->sourceData[$resourceName]);
+                                break;
+                            }
+                        } else {
+                            // A single resource (signalled by an empty pagination).
+                            // TODO: an empty pagination could also be a 404 error.
+                            if ($resourceName) {
+                                $this->resource = new Resource($this->sourceData[$resourceName]);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if ($this->has('status')) {
+                    // Older format, no pagination, resource will always be in
+                    // an array whether fetching just one or many.
+
+                    $hasMetadata = true;
+
+                    if ($resourceName) {
+                        $this->resource = new ResourceCollection($this->sourceData[$resourceName]);
+                        break;
+                    }
+                }
+            }
+
+            // Fallback - just a single resource on its own.
+
+            if (Helper::isAssociativeArray($this->sourceData)) {
+                $this->resource = new Resource($this->sourceData);
+                break;
+            }
+        } while (false);
+
+        // Now collect together the remaining fields as metadata.
+
+        $metadata = [];
+
+        if ($hasMetadata) {
+            foreach ($this->sourceData as $name => $item) {
+                $lcName = strtolower($name);
+
+                if ($lcName === 'pagination' || $lcName === 'problem' || $name === $resourceName) {
+                    continue;
+                }
+
+                $metadata[$name] = Helper::responseFactory($item, $name);
+            }
+        } else {
+            // TODO: Set some default metadata fields?
         }
+
+        // CHECKME: do we need to add any common metadata fields or made-up metadata fields?
+        $this->metadataResource = new Resource($metadata);
+    }
+
+    /**
+     * Return the pagination object.
+     */
+    public function getPagination()
+    {
+        return $this->paginationResource;
+    }
+
+    /**
+     * Return the metadata object.
+     */
+    public function getMetadata()
+    {
+        return $this->metadataResource;
+    }
+
+    /**
+     * Find the resource or resources element name in the source data.
+     * The assumption is that it will be the first array we find, skipping
+     * over some metadata fields we know about.
+     *
+     * @return string|null The field name or null if none found.
+     */
+    protected function findResourceField()
+    {
+        foreach ($this->sourceData as $name => $item) {
+            $lcName = strtolower($name);
+
+            if ($lcName === 'pagination' || $lcName === 'problem') {
+                // Some objects at the root level are definitely not resources.
+                continue;
+            }
+
+            if (is_array($item)) {
+                return $name;
+            }
+        }
+
+        // No resource fields found: null result.
     }
 
     /**
@@ -133,20 +286,21 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
     }
 
     /**
-     * @param string $name The name of the field using any letter-case.
-     * @return mixed The value of the source field or null if not set.
+     * @param string $name The name of the field using any letter-case
+     * @param mixed $default Value if the source field does not exist
+     * @return mixed The value of the source field or null if not set
      */
-    public function getSourceField($name)
+    public function getSourceField($name, $default = null)
     {
         return $this->hasSourceField($name)
             ? $this->sourceData[$this->index[strtolower($name)]]
-            : null;
+            : $default;
     }
 
     /**
      * @return array The source data.
      */
-    public function getSource()
+    public function getSourceData()
     {
         return $this->sourceData;
     }
@@ -274,10 +428,10 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
         return new ResourceCollection();
     }
 
-
     /**
      * Get the single resource, or the first resource if there are many.
      * Return an empty resource if there are none
+     *
      * @return Resource
      */
     public function getResource()
@@ -291,5 +445,16 @@ class ResponseMessage implements \Iterator, \Countable //\JsonSerializable
         }
 
         return new Resource();
+    }
+
+    /**
+     * Get the first resource, which may be the only resource.
+     * Default to an empty resource if there are none.
+     *
+     * @return Resource
+     */
+    public function first()
+    {
+        return $this->getResource();
     }
 }

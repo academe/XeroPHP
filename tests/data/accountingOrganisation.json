@@ -1,0 +1,62 @@
+{
+   "Id":"c339e855-aaaa-bbbb-cccc-dddd2d66ffff",
+   "Status":"OK",
+   "ProviderName":"My Application",
+   "DateTimeUTC":"\/Date(1511191011515)\/",
+   "Organisations":[
+      {
+         "APIKey":"STVXGL8FXXXXXXXXXXXXXXXXXCMF08",
+         "Name":"My Company",
+         "LegalName":"My Company",
+         "PaysTax":true,
+         "Version":"UK",
+         "OrganisationType":"COMPANY",
+         "BaseCurrency":"GBP",
+         "CountryCode":"GB",
+         "IsDemoCompany":false,
+         "OrganisationStatus":"ACTIVE",
+         "TaxNumber":"12345678910",
+         "FinancialYearEndDay":31,
+         "FinancialYearEndMonth":3,
+         "SalesTaxBasis":"ACCRUAL",
+         "SalesTaxPeriod":"QUARTERLY",
+         "DefaultSalesTax":"Tax Exclusive",
+         "DefaultPurchasesTax":"Tax Exclusive",
+         "CreatedDateUTC":"\/Date(1436961673017)\/",
+         "OrganisationEntityType":"COMPANY",
+         "Timezone":"UTC",
+         "ShortCode":"!jzx5T",
+         "OrganisationID":"d4b828b9-aaaa-bbbb-cccc-ddddebfeeee",
+         "LineOfBusiness":"Software Development",
+         "Addresses":[
+            {
+               "AddressType":"STREET",
+               "AddressLine1":"1 No Place",
+               "City":"Edinburgh",
+               "Region":"",
+               "PostalCode":"",
+               "Country":"UK",
+               "AttentionTo":""
+            },
+            {
+               "AddressType":"POBOX",
+               "AddressLine1":"1 No Place",
+               "City":"Edinburgh",
+               "Region":"",
+               "PostalCode":"",
+               "Country":"UK",
+               "AttentionTo":""
+            }
+         ],
+         "Phones":[
+
+         ],
+         "ExternalLinks":[
+
+         ],
+         "PaymentTerms":[
+
+         ]
+      }
+   ]
+}

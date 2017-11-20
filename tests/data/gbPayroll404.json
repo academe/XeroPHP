@@ -1,0 +1,15 @@
+{
+   "id":"a3a8f934-aaaa-bbbb-cccc-dddd6350eeee",
+   "providerName":"My Application",
+   "dateTimeUTC":"2017-11-20T15:24:48.6334558",
+   "httpStatusCode":"NotFound",
+   "pagination":null,
+   "problem":{
+      "type":"about:blank",
+      "title":"NotFound",
+      "status":404,
+      "detail":"Resource was not found",
+      "instance":null,
+      "invalidFields":null
+   }
+}

@@ -13,6 +13,11 @@ class Resource implements \Countable //\Iterator,  //\JsonSerializable
     /**
      *
      */
+    protected $sourceData = [];
+
+    /**
+     *
+     */
     protected $properties = [];
 
     /**
@@ -25,6 +30,8 @@ class Resource implements \Countable //\Iterator,  //\JsonSerializable
      */
     public function __construct(array $data = [])
     {
+        $this->sourceData = $data;
+
         foreach ($data as $name => $item) {
             $this->setProperty($name, Helper::responseFactory($item, $name));
         }
@@ -51,12 +58,39 @@ class Resource implements \Countable //\Iterator,  //\JsonSerializable
     }
 
     /**
+     * @return bool True if no properties are set
+     */
+    public function isEmpty()
+    {
+        return count($this->properties) === 0;
+    }
+
+    /**
+     * @param string $name The property name (case-insensitive)
+     * @return bool True if a property has been provided
+     */
+    public function has($name)
+    {
+        // The index alone has everything we need.
+        return array_key_exists(strtolower($name), $this->index);
+    }
+
+    /**
      * @param string $name Name of the property deliered by the API we want teh value of.
      * @return mixed
      */
     public function __get($name)
     {
         return $this->getProperty($name);
+    }
+
+    /**
+     * @param string $name The name of the field.
+     * @return bool True if a data field was supplied and is not null.
+     */
+    public function __isset($name)
+    {
+        return $this->has($name) && isset($this->sourceData[$this->index[strtolower($name)]]);
     }
 
     /**

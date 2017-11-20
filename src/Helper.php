@@ -176,16 +176,25 @@ class Helper
 
         if (is_string($data) && $name) {
             $lcName = strtolower($name);
+            $isDate = false;
 
             if (substr($lcName, -3) === 'utc') {
-                $data = static::toCarbon($data);
+                $isDate = true;
             }
 
             if (substr($lcName, -8) === 'datetime') {
-                $data = static::toCarbon($data);
+                $isDate = true;
             }
 
             if (substr($lcName, -4) === 'date') {
+                $isDate = true;
+            }
+
+            if (substr($lcName, 0, 11) === 'dateofbirth') {
+                $isDate = true;
+            }
+
+            if ($isDate) {
                 $data = static::toCarbon($data);
             }
         }
@@ -194,18 +203,16 @@ class Helper
             return $data;
         }
 
-        if (is_array($data) && static::isNumericArray($data)) {
+        // An empty array is assumed to be an empty collection.
+        if (is_array($data) && (static::isNumericArray($data) || empty($data))) {
             return new ResourceCollection($data);
         }
-        if (is_array($data) && static::isAssociativeArray($data)) {
-            // TODO: look for various metadata/resource/collection structures.
-            // ...
-            // ...or is that only needed at the root class?
 
-            // Fallback, most likely just a single resource.
+        if (is_array($data) && static::isAssociativeArray($data)) {
             return new Resource($data);
         }
 
+        // A Carbon date or something else.
         return $data;
     }
 }

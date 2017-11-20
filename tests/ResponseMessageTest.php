@@ -4,6 +4,7 @@ namespace Academe\XeroPHP;
 
 use PHPUnit\Framework\TestCase;
 use InvalidArgumentException;
+use Carbon\Carbon;
 
 class ResponseMessageTest extends TestCase
 {
@@ -85,14 +86,14 @@ class ResponseMessageTest extends TestCase
 
         $this->assertNull($message->getSourceField('bumblebee'));
 
-        $this->assertEquals($message->getSource(), $data);
+        $this->assertEquals($message->getSourceData(), $data);
     }
 
     public function testEmptyData()
     {
         $message = new ResponseMessage([]);
 
-        $this->assertEquals($message->getSource(), []);
+        $this->assertEquals($message->getSourceData(), []);
 
         $this->assertSame($message->isEmpty(), true);
         $this->assertSame($message->isCollection(), false);
@@ -185,5 +186,107 @@ class ResponseMessageTest extends TestCase
         $resource = $message->getResource();
 
         $this->assertSame($resource->name, 'Inbox');
+    }
+
+    // 
+
+    /**
+     * Properties of the root GB Payroll Employees collection response.
+     */
+    public function testGbPayrollEmployeesRoot()
+    {
+        $employees = $this->gbPayrollEmployees;
+
+        $this->assertEquals($employees->isCollection(), true);
+        $this->assertEquals($employees->isEmpty(), false);
+
+        $this->assertEquals($employees->count(), 2);
+        $this->assertEquals(count($employees), 2);
+
+        // Three different ways to get the first resource.
+        $this->assertEquals($employees->first()->firstName, 'Employee-One');
+        $this->assertEquals($employees->getCollection()->first()->firstName, 'Employee-One');
+        $this->assertEquals($employees->getResource()->firstName, 'Employee-One');
+
+        // Some pagination details are available.
+
+        $pagination = $employees->getPagination();
+
+        $this->assertEquals($pagination->page, 1);
+        $this->assertEquals($pagination->pagecount, 1);
+        $this->assertEquals($pagination->pageCount, 1);
+        $this->assertEquals($pagination->itemCount, 2);
+
+        // Taka a peek at the metadata.
+
+        $metadata = $employees->getMetadata();
+
+        $this->assertEquals('5d68e2c9-175b-41d8-8a9e-c2527110945f', $metadata->id);
+        $this->assertEquals('My Application', $metadata->providerName);
+        $this->assertInstanceOf(Carbon::class, $metadata->dateTimeUTC);
+        $this->assertEquals('2017-11-12 13:07:04', (string)$metadata->dateTimeUTC);
+
+        // The pagination is separate and should not be in the metadata.
+        // Various ways of checking that.
+        $this->assertEquals(false, $metadata->has('pagination'));
+        $this->assertEquals(false, isset($metadata->pagination));
+        $this->assertEquals(true, $metadata->pagination->isEmpty());
+    }
+
+    //
+
+    /**
+     * Properties of the root GB Payroll single Employee response.
+     */
+    public function testGbPayrollEmployeeRoot()
+    {
+        $employee = $this->gbPayrollEmployee;
+
+        $this->assertEquals($employee->isCollection(), false);
+        $this->assertEquals($employee->isEmpty(), false);
+
+        $this->assertEquals($employee->count(), 1);
+        $this->assertEquals(count($employee), 1);
+
+        $this->assertEquals($employee->first()->firstName, 'Employee-One');
+        $this->assertEquals($employee->getCollection()->first()->firstName, 'Employee-One');
+        $this->assertEquals($employee->getResource()->firstName, 'Employee-One');
+
+        // Pagination details for a single resource are fixed at one.
+
+        $pagination = $employee->getPagination();
+
+        $this->assertEquals($pagination->page, 1);
+        $this->assertEquals($pagination->pageCount, 1);
+        $this->assertEquals($pagination->itemCount, 1);
+    }
+
+    // 
+
+    /**
+     * Properties of the root Accounting Payments collection response.
+     */
+    public function testAccountingPaymentsRoot()
+    {
+        $payments = $this->accountingPayments;
+
+        $this->assertEquals($payments->isCollection(), true);
+        $this->assertEquals($payments->isEmpty(), false);
+
+        $this->assertEquals($payments->count(), 3);
+        $this->assertEquals(count($payments), 3);
+
+        // Dive deeper into the response data.
+        $this->assertEquals('87fa00b1-5ac5-402c-b7df-cd3f327be75b', $payments->first()->PaymentID);
+        $this->assertEquals('30f29d44-1623-4bde-83a9-354a2d1cffcd', $payments->first()->invoice->InvoiceID);
+        $this->assertEquals('CONSIL', $payments->first()->Account->Code);
+        $this->assertEquals('9ca7f25c-bf76-4aff-99dc-585d6822b172', $payments->first()->Invoice->Contact->contactid);
+
+        // The Invoice is a child resource.
+        $this->assertInstanceOf(Resource::class, $payments->first()->invoice);
+
+        // The CreditNotes are an array, so will be a collectinon, but happen to be empty.
+        $this->assertInstanceOf(ResourceCollection::class, $payments->first()->Invoice->CreditNotes);
+        $this->assertEquals(true, $payments->first()->Invoice->CreditNotes->isEmpty());
     }
 }

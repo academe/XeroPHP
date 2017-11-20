@@ -179,7 +179,7 @@ class ResponseData implements \JsonSerializable, \Iterator, \Countable
     }
 
     /**
-     * TODO: refactor this a bit - no need to fetch the item - just check the items array;.
+     * TODO: refactor this a bit - no need to fetch the item - just check the items array.
      */
     public function __isset($name)
     {

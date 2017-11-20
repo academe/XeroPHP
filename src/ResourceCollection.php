@@ -55,6 +55,14 @@ class ResourceCollection implements \Countable, \Iterator  //\JsonSerializable
     }
 
     /**
+     * @return bool True if no properties are set
+     */
+    public function isEmpty()
+    {
+        return count($this->items) === 0;
+    }
+
+    /**
      * For interface Countable.
      * The data provided is empty - no resource, no resource list and no metadata.
      */
