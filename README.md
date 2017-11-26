@@ -103,7 +103,7 @@ automatically when it expires and inform your application via the `tokenRefreshC
 After sending a request, you can check if the token was refreshed:
 
 ```php
-$tokensWereRefreshed = $refreshableClient->isTokenRefreshed();
+$tokenWasRefreshed = $refreshableClient->isTokenRefreshed();
 ```
 
 If the token is refreshed, then the new token will (hopefully) have been
@@ -114,6 +114,11 @@ token response, then it can be done like this:
 
 ```php
 $newTokenDetails = $refreshableClient->refreshToken();
+
+// New token details are retrieved using this method, and can then be stored,
+// assuming your callback has not already stored it.
+
+$oauthToken = $refreshableClient->getRefreshedToken(); // `OAuthParams`
 ```
 
 You then have to store $newTokenDetails (a value object - just pull out what

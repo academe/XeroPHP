@@ -76,9 +76,9 @@ class RefreshableClient
     /**
      * @return OAuthParams|null The token refresh response details, or null if no refresh.
      */
-    public function getFreshedToken()
+    public function getRefreshedToken()
     {
-        return $this->freshedToken;
+        return $this->refreshedToken;
     }
 
     /**
@@ -171,23 +171,6 @@ class RefreshableClient
             // The token has expired, so we should renew it.
             $this->refreshedToken = $this->refreshToken();
 
-            if (! $this->refreshedToken->hasToken()) {
-                // Failed to renew the tokens.
-                throw new \Exception(sprintf(
-                    'Token refresh error "%s": %s',
-                    $this->refreshedToken->oauth_problem,
-                    $this->refreshedToken->oauth_problem_advice
-                ));
-            }
-
-            // We have a new token.
-            // Make the details available to the user of this object.
-
-            $this->tokenRefreshed = true;
-
-            // Set a new clientProvider with the fresh tokens.
-            $this->clientProvider = $this->clientProvider->withFreshToken($this->refreshedToken);
-
             // This will create a new access client with the fresh tokens.
             $client = $this->clientProvider->getAccessClient();
 
@@ -228,6 +211,27 @@ class RefreshableClient
 
         $refresh_result = $refresh_client->get(null);
 
-        return $this->getOAuthParams($refresh_result);
+        $this->refreshedToken = $this->getOAuthParams($refresh_result);
+
+        if (! $this->refreshedToken->hasToken()) {
+            // Failed to renew the tokens.
+            throw new \Exception(sprintf(
+                'Token refresh error "%s": %s',
+                $this->refreshedToken->oauth_problem,
+                $this->refreshedToken->oauth_problem_advice
+            ));
+        }
+
+        // We have a new token.
+        // Make the details available to the user of this object.
+        // FIXME: reset this when there was no refresh.
+
+        $this->tokenRefreshed = true;
+
+        // Set a new clientProvider with the fresh tokens.
+
+        $this->clientProvider = $this->clientProvider->withFreshToken($this->refreshedToken);
+
+        return $this->refreshedToken;
     }
 }
