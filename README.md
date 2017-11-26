@@ -54,7 +54,7 @@ use use Academe\XeroPHP;
 
 // Most of the configuration goes into one place.
 
-$config = new XeroPHP\Config([
+$clientProvider = new XeroPHP\ClientProvider([
     // Account credentials.
     'consumerKey'    => 'your-consumer-key',
     'consumerSecret' => 'your-consumer-sectet',
@@ -64,59 +64,41 @@ $config = new XeroPHP\Config([
     // Curresnt session for refreshes also from storage.
     'oauthSessionHandle'   => $oauth_session_handle,
     // Running the Partner Application
-    'oauth1Additional' => [
+    'oauth1Options' => [
         'signature_method' => \GuzzleHttp\Subscriber\Oauth\Oauth1::SIGNATURE_METHOD_RSA,
         'private_key_file' => 'local/path/to/private.pem',
         'private_key_passphrase' => 'your-optional-passphrase',
     ],
-    'clientAdditional' => [
+    'clientOptions' => [
         // You will almost always want exceptions off, so Guzzle does not throw an exception
         // on every non-20x response.
         'exceptions' => false,
         'headers' => [
             // We would like JSON back for most APIs, as it is structured nicely.
             // Exceptions include 'application/pdf' to download or upload files.
-            'Accept' => 'application/json',
+            'Accept' => XeroPHP\ClientProvider::HEADER_ACCEPT_JSON,
         ],
     ],
     // When the token is automatically refreshed, then this callback will
     // be given the opportunity to put it into storage.
-    'tokenRefreshCallback' => function($newConfig, $oldConfig) use ($myStorageObject) {
+    'tokenRefreshCallback' => function($newClientProvider, $oldClientProvider) use ($myStorageObject) {
         // The new token and secret are available here:
-        $oauth_token = $newConfig->oauth_token;
-        $oauth_token_secret = $newConfig->oauth_token_secret;
+        $oauthToken= $newClientProvider->oauthToken;
+        $oauthTokenSecret = $newClientProvider->oauthTokenSecret;
+        $oauthExpiresAt = $newClientProvider->oauthExpiresAt; // Carbon\Carbon
 
-        // Now those new crdentials need storing.
-        $myStorageObject->storeTheNewTokenWhereever($oauth_token, $oauth_token_secret);
+        // Now those new credentials need storing.
+        $myStorageObject->storeTheNewTokenWhereever($oauth_token, $oauth_token_secret, $oauthExpiresAt);
     },
-    // Provide the default endpoint.
-    'endpoint' => new Endpoint(...),
 ]);
 
-// The `Config` class will accept `camelCase` or `snake_case` parameters, since
-// OAuth returns strictly snake_case, so can be fed directly into the `Config`.
-
-
-// The API object will help us coordinate setting up the client.
-$api = new XeroPHP\API($config);
-
-// The OAuth1 handler signs the requests.
-$oauth1 = $api->createOAuth1Handler();
-
-// The handler stack is used to push the OAuth1 handler into Guzzle.
-$stack = $api->createStack($oauth1);
-
 // Get a plain Guzzle client, with appropriate settings.
-$client = $api->createClient(['handler' => $stack]);
-
-// Create the auto-token refreshing client.
-// Use it like a Guzzle client to send requests.
-// Pass the resource path in as the URI, as the base URL is already
-// configured.
-$refreshableClient = $api->createRefreshableClient($client);
+$refreshableClient = $clientProvider->getRefreshableClient();
 ```
 
 Now we have a client to send requests.
+This is a refreshable client, so if using the Partner app, it will refresh its token
+automatically when it expires and inform your application via the `tokenRefreshCallback`.
 
 After sending a request, you can check if the token was refreshed:
 
