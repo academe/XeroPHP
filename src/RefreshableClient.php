@@ -21,9 +21,9 @@ class RefreshableClient
     protected $client;
 
     /**
-     * @var API
+     * @var ClientProvider
      */
-    protected $api;
+    protected $clientProvider;
 
     /**
      * @var bool Indicates whether the tokens have been automatically refreshed.
@@ -35,15 +35,10 @@ class RefreshableClient
      */
     protected $refreshedToken;
 
-    public function __construct(ClientInterface $client, API $api) // FIXME: now 2nd parameter is ClientProvider
+    public function __construct(ClientInterface $client, ClientProvider $clientProvider)
     {
         $this->client = $client;
-        $this->api = $api;
-    }
-
-    public function getConfig()
-    {
-        return $this->api->getConfig();
+        $this->clientProvider = $clientProvider;
     }
 
     /**
@@ -64,7 +59,7 @@ class RefreshableClient
         return substr($method, -5) === 'Async'
             ? $this->client->requestAsync(substr($method, 0, -5), $uri, $opts)
             : (
-                $this->getConfig()->oauthSessionHandle
+                $this->clientProvider->oauthSessionHandle
                 ? $this->request($method, $uri, $opts)
                 : $this->client->request($method, $uri, $opts)
             );
@@ -167,7 +162,8 @@ class RefreshableClient
 
         // For testing the fresh token handling, a token refresh can be forced by setting
         // this option.
-        if (! empty($options['forceTokenRefresh'])) {
+
+        if ($this->clientProvider->forceTokenRefresh) {
             $refreshRequired = true;
         }
 
@@ -189,25 +185,11 @@ class RefreshableClient
 
             $this->tokenRefreshed = true;
 
-            // The following seems really clumsy.
-            // We are creating a new client here just to make the new access
-            // attempt. We still need to signal to the caller that *its* original
-            // client needs to be rebuilt with the new tokens.
-            // Or maybe we just need a new OAuth1 handler, and replace the one on
-            // the stack?
+            // Set a new clientProvider with the fresh tokens.
+            $this->clientProvider = $this->clientProvider->withFreshToken($this->refreshedToken);
 
-            // A new config with the fresh token.
-            // This will also signal any watchers on the config object so that the
-            // new settings can be saved.
-            $config = $this->getConfig()->withFreshToken($this->refreshedToken);
-
-            // A new API with the new config.
-            $api = new API($config);
-
-            // A new client to redo the request.
-            $oauth1 = $api->createOAuth1Handler();
-            $stack = $api->createStack($oauth1);
-            $client = $api->createClient(['handler' => $stack]);
+            // This will create a new access client with the fresh tokens.
+            $client = $this->clientProvider->getAccessClient();
 
             // Retry the original request, but with this new client.
             $response = $client->request($method, $uri, $options);
@@ -229,7 +211,6 @@ class RefreshableClient
      * will last this long unless invalidated by the user. Re-authorising will invalidate
      * the current oauth_session_handle.
      * The oauth_token and the oauth_token_secret must be saved for all further accesses.
-     * CHECKME: does the oauth_session_handle ever change and need saving during refreshes?
      *
      * In the evenr of an error there will normally be:
      *  oauth_problem - an ereor code, e.g. "token_rejected"
@@ -241,32 +222,11 @@ class RefreshableClient
      */
     public function refreshToken($oauthToken = null, $oauthSessionHandle = null)
     {
-        // The URL to refresh: https://api.xero.com/oauth/AccessToken
-        $accessTokenUrl = new Endpoint(
-            $this->getConfig()->baseUrl,
-            $this->getConfig()->oauthBasePath,
-            $this->getConfig()->oauthAccessTokenResource
-        );
+        $refresh_client = $this->clientProvider->getRefreshClient();
 
-        // The signature is required, but it must go into the URL query when
-        // refreshing a tokan, rather than the header.
-        $refresh_oauth1 = $this->api->createOAuth1Handler(['request_method' => 'query']);
-        $refresh_handler_stack = $this->api->createStack($refresh_oauth1);
-        $refresh_client = $this->api->createClient(['handler' => $refresh_handler_stack]);
+        // Everything is already set for the refresh client; just make the request.
 
-        $refresh_result = $refresh_client->get(
-            $accessTokenUrl->getURL(),
-            [
-                'query' => [
-                    'oauth_token' => $oauthToken ?: $this->getConfig()->oauthToken,
-                    'oauth_session_handle' => $oauthSessionHandle ?: $this->getConfig()->oauthSessionHandle,
-                    'oauth_consumer_key' => $this->getConfig()->consumerKey,
-                    'signature_method' => OAuth1::SIGNATURE_METHOD_RSA,
-                ],
-                'auth' => 'oauth',
-                'exceptions' => false,
-            ]
-        );
+        $refresh_result = $refresh_client->get(null);
 
         return $this->getOAuthParams($refresh_result);
     }

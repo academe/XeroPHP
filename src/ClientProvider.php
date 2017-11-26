@@ -19,7 +19,6 @@ namespace Academe\XeroPHP;
 use GuzzleHttp\Subscriber\Oauth\Oauth1;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Client;
-//use Carbon\Carbon;
 
 class ClientProvider
 {
@@ -44,6 +43,11 @@ class ClientProvider
     protected $oauthExpiresAt;
 
     /**
+     * @var string The session handle for a renewable token.
+     */
+    protected $oauthSessionHandle;
+
+    /**
      * @var Callable
      */
     protected $tokenRefreshCallback;
@@ -64,16 +68,17 @@ class ClientProvider
     protected $clients = [];
 
     /**
-     *
+     * @var bool force a token refresh, mainly for testing.
      */
-    public function __construct(array $oauth1Options = [], array $clientOptions = [])
-    {
-        foreach($oauth1Options as $name => $option) {
-            $this->set($name, $option, 'oauth1Options');
-        }
+    protected $forceTokenRefresh = false;
 
-        foreach($clientOptions as $name => $option) {
-            $this->set($name, $option, 'clientOptions');
+    /**
+     * @param array Options to set properties.
+     */
+    public function __construct(array $options = [])
+    {
+        foreach ($options as $name => $option) {
+            $this->set($name, $option);
         }
     }
 
@@ -84,12 +89,39 @@ class ClientProvider
     public function __clone()
     {
         $this->clients = [];
+        $this->set('forceTokenRefresh', false);
+    }
+
+    public function get($name)
+    {
+        $property = Helper::snakeToCamel($name);
+        $getterName = 'get' . ucfirst($property);
+
+        if (method_exists($this, $getterName)) {
+            return $this->$getterName();
+        }
+
+        if (property_exists($this, $property)) {
+            return $this->$property;
+        }
+    }
+
+    /**
+     * Return a property value using a getter if available, or directly.
+     * Returns null if the property does not exist.
+     *
+     * @param string $name The property name, camel or snake case.
+     * @return mixed property name or null if no such property
+     */
+    public function __get($name)
+    {
+        return $this->get($name);
     }
 
     /**
      * Set a property, using a setter if there is one.
      */
-    protected function set($name, $value, $fallback = 'oauth1Options')
+    protected function set($name, $value)
     {
         $property = Helper::snakeToCamel($name);
         $setterName = 'set' . ucfirst($property);
@@ -103,14 +135,12 @@ class ClientProvider
             return $this;
         }
 
-        if (property_exists($this, $fallback)) {
-            // The fallback option array uses the raw option name.
-            $this->$fallback[$name] = $value;
-        }
-
         return $this;
     }
 
+    /**
+     * @param mixed $expiresAt Carbon instance or value convertable to Carbon.
+     */
     protected function setOauthExpiresAt($expiresAt)
     {
         $this->oauthExpiresAt = Helper::toCarbon($expiresAt);
@@ -118,9 +148,27 @@ class ClientProvider
     }
 
     /**
-     *
+     * @param array $options Additional OAuth1 handler options.
      */
-    public function getRenewableClient(Client $accessClient = null)
+    protected function setOauth1Options(array $options)
+    {
+        $this->oauth1Options = $options;
+        return $this;
+    }
+
+    /**
+     * @param array $options Additional OAuth1 handler options.
+     */
+    protected function setClientOptions(array $options)
+    {
+        $this->clientOptions = $options;
+        return $this;
+    }
+
+    /**
+     * getRefreshableAccessClient?
+     */
+    public function getRefreshableClient(Client $accessClient = null)
     {
         if ($accessClient === null) {
             $accessClient = $this->getAccessClient();
@@ -136,6 +184,23 @@ class ClientProvider
      */
     public function getRefreshClient()
     {
+        $client = $this->getAccessClient(
+            [
+                'query' => [
+                    'oauth_token' => $this->oauthToken,
+                    'oauth_session_handle' => $this->oauthSessionHandle,
+                    'oauth_consumer_key' => $this->consumerKey,
+                    'signature_method' => OAuth1::SIGNATURE_METHOD_RSA,
+                ],
+                'base_uri' => Endpoint::createOAuthRefresh()->getUrl(),
+                'exceptions' => true,
+            ],
+            [
+                'request_method' => 'query',
+            ]
+        );
+
+        return $client;
     }
 
     /**
@@ -237,7 +302,7 @@ class ClientProvider
      * Also invokes the callback to notify the application of the freshed tokens.
      *
      * @param OAuthParams $params The OAuth refrssh response message.
-     * @return self Clone of $this, with new 
+     * @return self Clone of $this, with new OAuth tokens.
      */
     public function withFreshToken(OAuthParams $params)
     {

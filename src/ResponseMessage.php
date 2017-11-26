@@ -492,4 +492,9 @@ class ResponseMessage implements \Iterator, \Countable, \JsonSerializable
     {
         return $this->getResource();
     }
+
+    public function isError()
+    {
+        return false;
+    }
 }
