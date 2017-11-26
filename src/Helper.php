@@ -51,7 +51,7 @@ class Helper
             // This check may have to gom as it throws out, for example, OAuth expiry
             // times that may have been retrieved from the database as strings.
 
-            if (! preg_match('/\-[0-9]{2,2}T[0-9]{2,2}:/', $item)) {
+            if (! preg_match('/\-[0-9]{2,2}[T ][0-9]{2,2}:/', $item)) {
                 return $item;
             }
 
@@ -109,6 +109,7 @@ class Helper
 
     /**
      * Parse an API response body into an array.
+     * TODO: handle streamed responses such as PDF documents.
      */
     public static function parseResponse(ResponseInterface $response)
     {
@@ -138,12 +139,14 @@ class Helper
             case 'text/html':
                 // The older format will return a string in the event of an error.
                 // If we have a one-line string, we will wrap it into the simple message
-                // array that the new format uses when a rrequest is malformed.
+                // array that the new format uses when a request is malformed.
+                //
                 // TODO: also look out for URL-encoded parameters injected by Xero's
                 // OAuth middleware.
                 $data = [
                     'message' => (string)$response->getBody(),
-                    'httpStatusCode' => $response->getStatusCode(),
+                    'statusCode' => $response->getStatusCode(),
+                    'httpStatusCode' => $response->getReasonPhrase(),
                 ];
                 break;
                 //
@@ -157,7 +160,8 @@ class Helper
         if (is_string($data)) {
             return [
                 'message' => $data,
-                'httpStatusCode' => $response->getStatusCode(),
+                'statusCode' => $response->getStatusCode(),
+                'httpStatusCode' => $response->getReasonPhrase(),
             ];
         }
 

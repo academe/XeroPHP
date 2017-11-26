@@ -35,7 +35,7 @@ class RefreshableClient
      */
     protected $refreshedToken;
 
-    public function __construct(ClientInterface $client, API $api)
+    public function __construct(ClientInterface $client, API $api) // FIXME: now 2nd parameter is ClientProvider
     {
         $this->client = $client;
         $this->api = $api;
@@ -46,16 +46,20 @@ class RefreshableClient
         return $this->api->getConfig();
     }
 
+    /**
+     * Handle requests such as get(), put() and post().
+     */
     public function __call($method, $args)
     {
         if (count($args) < 1) {
-            throw new \InvalidArgumentException('Magic request methods require a URI and optional options array');
+            throw new \InvalidArgumentException('Magic request methods require at least a URI');
         }
 
         $uri = $args[0];
         $opts = isset($args[1]) ? $args[1] : [];
 
-        // The token can be refreshed only if there is a refresh token.
+        // The token can be refreshed only if there is a refresh token, so only call the
+        // local request method if we have a handle.
 
         return substr($method, -5) === 'Async'
             ? $this->client->requestAsync(substr($method, 0, -5), $uri, $opts)
@@ -112,7 +116,7 @@ class RefreshableClient
      *
      * @param string $method GET, POST PUT, etc.
      * @param string $uri The aobsolute URI or URI relative to the bas URI
-     * @paran array $optins Additional options to send to the Guzzle request
+     * @paran array $options Additional options to send to the Guzzle request
      */
     public function request($method, $uri = '', array $options = [])
     {
@@ -192,10 +196,10 @@ class RefreshableClient
             // Or maybe we just need a new OAuth1 handler, and replace the one on
             // the stack?
 
-            // A new config with the fresh tokens.
+            // A new config with the fresh token.
             // This will also signal any watchers on the config object so that the
             // new settings can be saved.
-            $config = $this->getConfig()->withFreshTokens($this->refreshedToken);
+            $config = $this->getConfig()->withFreshToken($this->refreshedToken);
 
             // A new API with the new config.
             $api = new API($config);

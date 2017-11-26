@@ -13,6 +13,7 @@ class ResponseMessageTest extends TestCase
     protected $accountingPayments;
     protected $accountingPayment;
     protected $accountingPaymentsNoMatch;
+    protected $accounting404;
     protected $fileFolders;
     protected $fileFolder;
 
@@ -41,6 +42,10 @@ class ResponseMessageTest extends TestCase
         // No-match payments from the Accounting API v2.0.
         $accountingPaymentsNoMatch = json_decode(file_get_contents(__DIR__ . '/data/accountingPaymentsNoMatch.json'), true);
         $this->accountingPaymentsNoMatch = new ResponseMessage($accountingPaymentsNoMatch);
+
+        // 404 from the Accounting API v2.0.
+        $accounting404 = json_decode(file_get_contents(__DIR__ . '/data/accounting404.json'), true);
+        $this->accounting404 = new ResponseMessage($accounting404);
 
         // Two folders from the Files API v1.0.
         $fileFolders = json_decode(file_get_contents(__DIR__ . '/data/FileFolders.json'), true);
@@ -288,5 +293,27 @@ class ResponseMessageTest extends TestCase
         // The CreditNotes are an array, so will be a collectinon, but happen to be empty.
         $this->assertInstanceOf(ResourceCollection::class, $payments->first()->Invoice->CreditNotes);
         $this->assertEquals(true, $payments->first()->Invoice->CreditNotes->isEmpty());
+    }
+
+    /**
+     * Properties of the root Accounting Payments collection response.
+     */
+    public function testAccounting404()
+    {
+        $accounting404 = $this->accounting404;
+
+        $this->assertEquals($accounting404->isCollection(), false);
+        $this->assertEquals($accounting404->isResource(), true);
+        $this->assertEquals($accounting404->isEmpty(), false);
+        $this->assertEquals($accounting404->isError(), true);
+
+        //var_dump($accounting404->toArray());
+        // ["message"]=>
+        // string(47) "The resource you're looking for cannot be found"
+        // ["httpStatusCode"]=>
+        // int(404)
+        //
+        // Some errors will contain a collection of individual errors for all the fields that have
+        // an input issue.
     }
 }

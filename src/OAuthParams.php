@@ -47,13 +47,15 @@ class OAuthParams implements \JsonSerializable
     protected $params = [];
 
     /**
+     * This is the fallback if no token creation time or expiry time is passed in.
      * @var Carbon UTC time this object was created.
      */
     protected $objectCreatedAt;
 
     /**
      * Expects an array.
-     * CHECKME: any other array-like interfaces we could take account of?
+     * CHECKME: any other array-like interfaces we could take account of
+     * TODO: accept the expected expiry time (with guard time added by the application).
      */
     public function __construct($data)
     {
@@ -178,8 +180,8 @@ class OAuthParams implements \JsonSerializable
         return array_merge(
             $this->params,
             [
-                static::CREATED_AT => $this->get(static::CREATED_AT),
-                static::OAUTH_EXPIRES_AT => $this->get(static::OAUTH_EXPIRES_AT),
+                static::CREATED_AT => (string)$this->get(static::CREATED_AT),
+                static::OAUTH_EXPIRES_AT => (string)$this->get(static::OAUTH_EXPIRES_AT),
             ]
         );
     }

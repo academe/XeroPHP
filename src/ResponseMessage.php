@@ -53,7 +53,7 @@ class ResponseMessage implements \Iterator, \Countable, \JsonSerializable
         // If the data is a HTTP response, then parse the data out from that.
 
         if ($data instanceof ResponseInterface) {
-            $data = Helper::parseResponse($data);
+            $data = Helper::parseResponse($data, $statusCode);
         }
 
         if (! is_array($data)) {
@@ -97,6 +97,10 @@ class ResponseMessage implements \Iterator, \Countable, \JsonSerializable
 
         if ($this->isCollection()) {
             $array['resources'] = $this->getCollection()->toArray();
+        }
+
+        if ($this->isResource()) {
+            $array['resource'] = $this->getResource()->toArray();
         }
 
         return $array;

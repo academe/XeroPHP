@@ -33,7 +33,7 @@ class Config
     // Token expiry time and refresh token.
     // expires_at as the local unix timestamp, calculated when the
     // token was first obtained or last refreshed.
-    protected $expiresAt;
+    protected $oauthExpiresAt;
     protected $oauthSessionHandle;
 
     // OAuth app path.
@@ -135,6 +135,12 @@ class Config
         return $this;
     }
 
+    protected function setOauthExpiresAt($value)
+    {
+        $this->oauthExpiresAt = Helper::toCarbon($value);
+        return $this;
+    }
+
     protected function setTokenRefreshCallback(callable $value)
     {
         $this->tokenRefreshCallback = $value;
@@ -151,9 +157,9 @@ class Config
     }
 
     /**
-     * Set new tokens after a refresh.
+     * Set new token after a refresh.
      */
-    public function withFreshTokens(OAuthParams $params)
+    public function withFreshToken(OAuthParams $params)
     {
         $clone = clone $this;
 
