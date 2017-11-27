@@ -143,11 +143,26 @@ class Helper
                 //
                 // TODO: also look out for URL-encoded parameters injected by Xero's
                 // OAuth middleware.
+                $message = (string)$response->getBody();
+
+                // TODO: check if a single line too.
+                // Maybe check for "oauth_" in the line too.
+                if (strpos($message, '&') !== false) {
+                    parse_str($message, $bodyParts);
+                }
+
                 $data = [
-                    'message' => (string)$response->getBody(),
+                    'message' => $message,
                     'statusCode' => $response->getStatusCode(),
                     'httpStatusCode' => $response->getReasonPhrase(),
                 ];
+
+                if (! empty($bodyParts)) {
+                    // Merge in URL-encoded body message parts, if present.
+                    // This will be from the OAuth layer.
+                    $data = array_merge($data, $bodyParts);
+                }
+
                 break;
                 //
             default:
