@@ -48,10 +48,9 @@ Areas to Complete (TODO)
 ------------------------
 
 * So far development of this package has concentrated on reading from the Xero API.
-Writing to the API should be supported, but has not gone through any testing
-at this stage.
+  Writing to the API should be supported, but has not gone through any testing
+  at this stage.
 * Lots more documentation and examples.
-* Docs on the Expiry class, which splits OAuthParams into two separate classes.
 
 Quick Start
 -----------
@@ -308,6 +307,9 @@ throw an exception using the `exceptions` option:
 $response = $client->get('PayRuns', ['exceptions' => false]);
 ```
 
+*Note: this package now switches off Guzzle exceptions by defaul. You can turn them back on
+using this parameter if that is desirable.*
+
 This option can be used on each request, or set as the default in the `Config` instantiation.
 This package is designed not to care which approach you take. However, *not* throwing an
 exception often makes sense, because even non-20x responses nearly always contain a response
@@ -323,6 +325,7 @@ in the meantime here is a list of those we know:
 * OAuth errors
 * Request construction errors, such as an invalid UUID format
 * Invalid resource errors, such as a missing resource or incorrect URL
+* Data errors such as trying to retrieve beyond the last page of results
 
 The places where error details cna be found are:
 

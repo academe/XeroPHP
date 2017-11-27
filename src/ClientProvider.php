@@ -11,11 +11,8 @@ namespace Academe\XeroPHP;
  * the messages here and injecting what we want into those? That way we keep using
  * the same client. That would be nice if guzzlehttp/oauth-subscriber included
  * public methods to sign a resuest, but it hides all that stuff internally.
- *
- * TODO: define an interface contract.
  */
 
-//use Psr\Http\Message\ResponseInterface;
 use GuzzleHttp\Subscriber\Oauth\Oauth1;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Client;
@@ -28,6 +25,13 @@ class ClientProvider
      const HEADER_ACCEPT_JSON   = 'application/json';
      const HEADER_ACCEPT_PDF    = 'application/pdf';
      const HEADER_ACCEPT_XML    = 'application/xml';
+
+    /**
+     * How long we will wait for a response when refreshing a token.
+     * This is critical to prevent breaking the token chain, so we give a
+     * slow Xero as long as we can.
+     */
+     const TOKEN_REFRESH_TIMEOUT_SECONDS = 60;
 
     /**
      * @var Pre-shared key and secret for signing.
@@ -48,7 +52,7 @@ class ClientProvider
     protected $oauthSessionHandle;
 
     /**
-     * @var Callable
+     * @var Callable Callback closure or function when a token is refreshed.
      */
     protected $tokenRefreshCallback;
 
@@ -63,7 +67,7 @@ class ClientProvider
     protected $clientOptions = [];
 
     /**
-     * @var Cached clients.
+     * @var Cached HTTP client cache.
      */
     protected $clients = [];
 
@@ -88,8 +92,7 @@ class ClientProvider
     }
 
     /**
-     * Clear the client cache in a clone, because cloning is done when
-     * new parameters are needed.
+     * Clear the client cache in a clone, as properties are changing.
      */
     public function __clone()
     {
@@ -97,6 +100,12 @@ class ClientProvider
         $this->set('forceTokenRefresh', false);
     }
 
+    /**
+     * Get a property value, prioritising a getter method if available.
+     *
+     * @param string $name Name of property in snake_case or lowerCamelCase
+     * @return mixed
+     */
     public function get($name)
     {
         $property = Helper::snakeToCamel($name);
@@ -199,6 +208,7 @@ class ClientProvider
                 ],
                 'base_uri' => Endpoint::createOAuthRefresh()->getUrl(),
                 'exceptions' => true,
+                'timeout' => static::TOKEN_REFRESH_TIMEOUT_SECONDS,
             ],
             'oauth1Options' => [
                 'request_method' => 'query',

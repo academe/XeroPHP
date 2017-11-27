@@ -6,8 +6,6 @@ namespace Academe\XeroPHP;
  * Simple value object for the OAuth response parameters.
  * A little more intelligent than an array.
  *
- * More methods will be added to interpret more OAuth return parameters.
- *
  * OAuth registration and renewal will give us:
  * - oauth_expires_in - expiry time in seconds for a token from its creation
  * The oauth_expires_in is no use without knowing the creation time.
@@ -16,9 +14,6 @@ namespace Academe\XeroPHP;
  * Once calculated, it can be returned as a Carbon/DateTime object, and set (by
  * retrieval as a unix timestamp (integer), a Carbon/DateTime object or a parsable
  * string.
- * We should probably have an oauth_created_at which operates in a similat way.
- * When ititialising, we only create an oauth_created_at in the object if one was
- * not supplied in the setup data.
  */
 
 use Carbon\Carbon;
@@ -54,8 +49,8 @@ class OAuthParams implements \JsonSerializable
 
     /**
      * Expects an array.
-     * CHECKME: any other array-like interfaces we could take account of
-     * TODO: accept the expected expiry time (with guard time added by the application).
+     * CHECKME: any other array-like interfaces we could take account of?
+     * TODO: accept a PSR-7 Response object.
      */
     public function __construct($data)
     {
@@ -106,6 +101,12 @@ class OAuthParams implements \JsonSerializable
         return $this;
     }
 
+    /**
+     * Magic getter for properties.
+     *
+     * @paran string $name
+     * @return mixed
+     */
     public function __get($name)
     {
         return $this->get($name);
@@ -118,6 +119,8 @@ class OAuthParams implements \JsonSerializable
 
     /**
      * Calculate the expiry time.
+     * This is the time you would store against a token so you know when it is
+     * going to be expiring.
      * For any non-successfulk response without an expires_in parameter, the
      * expiry time will always be calculated as now.
      *
@@ -135,6 +138,8 @@ class OAuthParams implements \JsonSerializable
 
     /**
      * The oauthExpiresAt parameter is parsed to a Carbon datetime.
+     * TODO: remove this. We should only be using this class to capture OAuth response
+     * data directly from the remote site, and ExpiresAt does not does not come from there.
      *
      * @param mixed $createdAtTime
      * $return $this
@@ -194,14 +199,19 @@ class OAuthParams implements \JsonSerializable
     public function isExpired()
     {
         if ($this->get(static::PARAM_OAUTH_PROBLEM) === static::OAUTH_PROBLEM_TOKEN_EXPIRED) {
-            // The server has indicated the token we just tried to
-            // use has expired.
+            // The server has indicated the token we just tried to use has expired.
+            // This one is pretty unambiguous.
 
             return true;
         }
 
         if ($this->getRemainingSeconds() <= 0) {
             // Time has run out already.
+            // This is a little more suspect. The only time the OAuth response will give us
+            // an expiry period (in seconds) is when the token is being created or refreshed,
+            // and then it most certainly won't be anywhere near expiring. We probably need to
+            // remove this check, since it will almost always be true at the typical times we
+            // would want to check it.
 
             return true;
         }
@@ -211,8 +221,8 @@ class OAuthParams implements \JsonSerializable
     }
 
     /**
-     * Tells us if there is a token here, signalling perhaps a successful
-     * token fetch or refresh.
+     * Tells us if there is a token here, signalling a successful
+     * token creation or refresh.
      */
     public function hasToken()
     {
@@ -223,6 +233,11 @@ class OAuthParams implements \JsonSerializable
 
     /**
      * The remaining time before the token is expected to expire.
+     *
+     * CHECKME: is this really of any use? The remote service will return an expiry
+     * period in seconds, or it won't. In cercumstances when it doesn't, we should not
+     * be asking the expiry time question anyway. I think it should be removed.
+     *
      * @return int Time returned in seconds (only while expiresAt() returns seconds).
      */
     public function getRemainingSeconds()
