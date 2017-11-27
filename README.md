@@ -172,16 +172,19 @@ converted to an array:
 // Get the first page of payruns.
 // This assumes the payrun Endpoint was supplied as the default endpoint:
 $response = $refreshableClient->get('payruns', ['query' => ['page' => 1]]);
-// or if no default endpoint was given in the config:
-$response = $refreshableClient->get($api->getGbPayrollAPI('payruns'), ['query' => ['page' => 1]]);
 
+// or if no default endpoint was given in the config:
+$response = $refreshableClient->get(
+    XeroPHP\Endpoint::createGbPayroll('payruns')->getUrl(),
+    ['query' => ['page' => 1]]
+);
 
 // Assuming all is fine, parse the response to an array.
 $bodyArray = XeroPHP\Helper::parseResponse($response);
 
 // Instantiate the response data object.
 $result = new XeroPHP\ResponseMessage($bodyArray);
-// or just the PSR-7 response:
+// or just the PSR-7 response without the need to parse it first:
 $result = new XeroPHP\ResponseMessage($response);
 
 // Now we can navigate the data.
@@ -213,7 +216,8 @@ var_dump($result->getPagination()->toArray());
 ```
 
 The results object provides access to structured data of resources fetched from the API.
-It is a value object, and does not provide any ORM-like functionality.
+It is a value object, and does not provide any ORM-like functionality (e.g. you can't
+update it then `PUT` it back to Xero, at least not yet).
 
 A `ResponseMessage` object may contain a resource, a collection or resources, or may be empty.
 The following methods indicate what the response contains:
@@ -255,7 +259,9 @@ There is no automatic pagination feature (automatically fetching subsequent page
 iterating over a paginated resource.
 A decorator class could easily do this though, and that may make a nice addition to take
 the logic of "fetching all the matching things" that span more than one page away from
-the application.
+the application (ideally the application would make a query, then loop over the resources
+and each page would be lazy-loaded into the collection automatically when going off the
+end of the page).
 
 All other datatypes will be either a scalar the API supplied (string, float, int, boolean)
 or another `ResponseData` object containing either a single `Resource` (e.g. "Invoice")
