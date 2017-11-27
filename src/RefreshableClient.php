@@ -12,6 +12,8 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Subscriber\Oauth\OAuth1;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Response;
+use InvalidArgumentException;
+use Carbon\Carbon;
 
 class RefreshableClient
 {
@@ -28,7 +30,7 @@ class RefreshableClient
     /**
      * @var bool Indicates whether the tokens have been automatically refreshed.
      */
-    protected $tokenRefreshed = false;
+    protected $tokenIsRefreshed = false;
 
     /**
      * @var OAuthParams|null Details of the refreshed token.
@@ -47,7 +49,7 @@ class RefreshableClient
     public function __call($method, $args)
     {
         if (count($args) < 1) {
-            throw new \InvalidArgumentException('Magic request methods require at least a URI');
+            throw new InvalidArgumentException('Magic request methods require at least a URI');
         }
 
         $uri = $args[0];
@@ -68,9 +70,9 @@ class RefreshableClient
     /**
      * @return bool Indicates that the tokens have been automaically refreshed.
      */
-    public function isTokenRefreshed()
+    public function tokenIsRefreshed()
     {
-        return $this->tokenRefreshed;
+        return $this->tokenIsRefreshed;
     }
 
     /**
@@ -103,6 +105,11 @@ class RefreshableClient
         }
 
         return new OAuthParams($parts);
+    }
+
+    public function getClientProvider()
+    {
+        return $this->clientProvider;
     }
 
     /**
@@ -169,13 +176,18 @@ class RefreshableClient
 
         if ($refreshRequired) {
             // The token has expired, so we should renew it.
-            $this->refreshedToken = $this->refreshToken();
+            // We get a new ClientProvider in return.
+            $clientProvider = $this->refreshToken();
 
             // This will create a new access client with the fresh tokens.
-            $client = $this->clientProvider->getAccessClient();
+            $client = $clientProvider->getAccessClient($clientProvider->lastRefreshableClientOptions);
 
-            // Retry the original request, but with this new client.
+            // Retry the original request, but with this non-refreshable client.
             $response = $client->request($method, $uri, $options);
+
+            $this->clientProvider = $clientProvider;
+        } else {
+            $this->tokenIsRefreshed = false;
         }
 
         return $response;
@@ -201,9 +213,9 @@ class RefreshableClient
      *
      * Once refreshed, this client should be discarded and rebuilt from scratch.
      *
-     * @return OAuthParams The OAuth parameters in response to the refresh request
+     * @return clientProvider The new clientProvider used to create a new client.
      */
-    public function refreshToken($oauthToken = null, $oauthSessionHandle = null)
+    public function refreshToken()
     {
         $refresh_client = $this->clientProvider->getRefreshClient();
 
@@ -211,27 +223,49 @@ class RefreshableClient
 
         $refresh_result = $refresh_client->get(null);
 
-        $this->refreshedToken = $this->getOAuthParams($refresh_result);
+        $refreshedToken = $this->getOAuthParams($refresh_result);
 
-        if (! $this->refreshedToken->hasToken()) {
+        if (! $refreshedToken->hasToken()) {
             // Failed to renew the tokens.
             throw new \Exception(sprintf(
                 'Token refresh error "%s": %s',
-                $this->refreshedToken->oauth_problem,
-                $this->refreshedToken->oauth_problem_advice
+                $refreshedToken->oauth_problem,
+                $refreshedToken->oauth_problem_advice
             ));
         }
 
+        $this->refreshedToken = $refreshedToken;
+
         // We have a new token.
         // Make the details available to the user of this object.
-        // FIXME: reset this when there was no refresh.
 
-        $this->tokenRefreshed = true;
+        $this->tokenIsRefreshed = true;
 
-        // Set a new clientProvider with the fresh tokens.
+        // Set a new clientProvider with the fresh token details.
 
         $this->clientProvider = $this->clientProvider->withFreshToken($this->refreshedToken);
 
-        return $this->refreshedToken;
+        // Rebuild the client, using whatever initial options were provided when the
+        // provider was first created.
+        // Reuse the options we saved when the refreshable client was first created.
+
+        $this->client = $this->clientProvider->getRefreshableClient(
+            $this->clientProvider->lastRefreshableClientOptions
+        );
+
+        return $this->clientProvider;
+    }
+
+    /**
+     * Check if the token expiry time has been reached, within the guard time, given in seconds.
+     * Use this to do an early explicit token refresh before using the API.
+     *
+     * @return bool True if the expiry time has been reached, with guard time in seconds.
+     */
+    public function isExpired($guardSeconds = 0)
+    {
+        $remainingSeconds = Carbon::now()->diffInSeconds($this->clientProvider->oauthExpiresAt, false);
+
+        return ($remainingSeconds - $guardSeconds) < 0;
     }
 }

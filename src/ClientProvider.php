@@ -73,6 +73,11 @@ class ClientProvider
     protected $forceTokenRefresh = false;
 
     /**
+     * @var array Last options used to create a refreshable client; used for rebuild after a refresh.
+     */
+    protected $lastRefreshableClientOptions = [];
+
+    /**
      * @param array Options to set properties.
      */
     public function __construct(array $options = [])
@@ -166,13 +171,13 @@ class ClientProvider
     }
 
     /**
-     * getRefreshableAccessClient?
+     * @param array $options Options for the underlying AccessClient
      */
-    public function getRefreshableClient(Client $accessClient = null)
+    public function getRefreshableClient(array $options = [])
     {
-        if ($accessClient === null) {
-            $accessClient = $this->getAccessClient();
-        }
+        $this->lastRefreshableClientOptions = $options;
+
+        $accessClient = $this->getAccessClient($options);
 
         $renewableClient = new RefreshableClient($accessClient, $this);
         return $renewableClient;
@@ -180,12 +185,12 @@ class ClientProvider
 
     /**
      * The refresh client is similar to the access client, but with the
-     * tokens in the GET parameters.
+     * token fields in the query string.
      */
     public function getRefreshClient()
     {
-        $client = $this->getAccessClient(
-            [
+        $client = $this->getAccessClient([
+            'clientOptions' => [
                 'query' => [
                     'oauth_token' => $this->oauthToken,
                     'oauth_session_handle' => $this->oauthSessionHandle,
@@ -195,10 +200,10 @@ class ClientProvider
                 'base_uri' => Endpoint::createOAuthRefresh()->getUrl(),
                 'exceptions' => true,
             ],
-            [
+            'oauth1Options' => [
                 'request_method' => 'query',
             ]
-        );
+        ]);
 
         return $client;
     }
@@ -210,7 +215,7 @@ class ClientProvider
      * and Public applications.
      *
      * @param array $options Override any default client options.
-     * @param array $options Override any default OAuth1 handler options.
+     * @param array $oauth1Options Override any default OAuth1 handler options.
      * @return Client
      */
     public function getAccessClient(array $options = [], array $oauth1Options = [])
@@ -222,10 +227,7 @@ class ClientProvider
             return $this->clients[$index];
         }
 
-        $oauth1 = $this->createOAuth1Handler($oauth1Options);
-
-        // CHECKME: Is there any way to hook into any handler stack that may already be
-        // injected into the client?
+        $oauth1 = $this->createOAuth1Handler(isset($options['oauth1Options']) ? $options['oauth1Options'] : []);
 
         $stack = $this->createStack($oauth1);
 
@@ -244,7 +246,7 @@ class ClientProvider
         $clientOptions = array_merge_recursive(
             $clientOptions,
             $this->clientOptions,
-            $options
+            isset($options['clientOptions']) ? $options['clientOptions'] : []
         );
 
         $client = new Client($clientOptions);

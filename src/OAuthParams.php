@@ -118,8 +118,10 @@ class OAuthParams implements \JsonSerializable
 
     /**
      * Calculate the expiry time.
+     * For any non-successfulk response without an expires_in parameter, the
+     * expiry time will always be calculated as now.
      *
-     * @return Carbon UTC time the tokens are expected to expire.
+     * @return Carbon UTC time the token is expected to expire.
      */
     public function getOauthExpiresAt()
     {

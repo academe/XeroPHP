@@ -54,15 +54,19 @@ use use Academe\XeroPHP;
 
 // Most of the configuration goes into one place.
 
+$myStorageObject = /* OAuth token storage object */
+
 $clientProvider = new XeroPHP\ClientProvider([
     // Account credentials.
-    'consumerKey'    => 'your-consumer-key',
-    'consumerSecret' => 'your-consumer-sectet',
+    'consumerKey'       => 'your-consumer-key',
+    'consumerSecret'    => 'your-consumer-sectet',
     // Current token and secret from storage.
-    'oauthToken'           => $oauth_token,
-    'oauthTokenSecret'    => $oauth_token_secret,
+    'oauthToken'            => $myStorageObject->oauth_token,
+    'oauthTokenSecret'      => $myStorageObject->oauth_token_secret,
     // Curresnt session for refreshes also from storage.
-    'oauthSessionHandle'   => $oauth_session_handle,
+    'oauthSessionHandle'    => $myStorageObject->oauth_session_handle,
+    // The local time the OAuth token is expected to expire.
+    'oauthExpiresAt'        => $myStorageObject->oauthExpiresAt,
     // Running the Partner Application
     'oauth1Options' => [
         'signature_method' => \GuzzleHttp\Subscriber\Oauth\Oauth1::SIGNATURE_METHOD_RSA,
@@ -72,10 +76,12 @@ $clientProvider = new XeroPHP\ClientProvider([
     'clientOptions' => [
         // You will almost always want exceptions off, so Guzzle does not throw an exception
         // on every non-20x response.
+        // false is the default if not supplied.
         'exceptions' => false,
         'headers' => [
             // We would like JSON back for most APIs, as it is structured nicely.
             // Exceptions include 'application/pdf' to download or upload files.
+            // JSON is the default if not supplied.
             'Accept' => XeroPHP\ClientProvider::HEADER_ACCEPT_JSON,
         ],
     ],
@@ -90,6 +96,8 @@ $clientProvider = new XeroPHP\ClientProvider([
         // Now those new credentials need storing.
         $myStorageObject->storeTheNewTokenWhereever($oauth_token, $oauth_token_secret, $oauthExpiresAt);
     },
+    // If you want to force a token refresh immediately, then set this option.
+    //'forceTokenRefresh' => true,
 ]);
 
 // Get a plain Guzzle client, with appropriate settings.
@@ -100,29 +108,35 @@ Now we have a client to send requests.
 This is a refreshable client, so if using the Partner app, it will refresh its token
 automatically when it expires and inform your application via the `tokenRefreshCallback`.
 
-After sending a request, you can check if the token was refreshed:
+After sending a request, you can check if the token was refreshed and rebuild the client
+for any further requests on the page:
 
 ```php
-$tokenWasRefreshed = $refreshableClient->isTokenRefreshed();
+if ($refreshableClient->tokenIsRefreshed()) {
+    // Maybe save the token or other details, or just log the event.
+}
 ```
 
-If the token is refreshed, then the new token will (hopefully) have been
-stored. The client then needs to be rebuilt as above.
+If the token is refreshed, then the new token will have been stored by your app through
+the callback.
 
-If you want to refresh the tokens explicitly, before you hit an expired
-token response, then it can be done like this:
+If you want to refresh the tokens explicitly, before you hit an expired token response,
+then it can be done like this:
 
 ```php
-$newTokenDetails = $refreshableClient->refreshToken();
+// Refresh the token and get a new provider back:
 
-// New token details are retrieved using this method, and can then be stored,
-// assuming your callback has not already stored it.
+$clientProvider = $refreshableClient->refreshToken();
 
-$oauthToken = $refreshableClient->getRefreshedToken(); // `OAuthParams`
+// The `$refreshableClient` will now have a new Guzzzle client with a refreshed token.
+// The new token details are retrieved from the provider, and can then be stored,
+// assuming your callback has not already stored it. Store these three details:
+
+$clientProvider->oauthToken;
+$clientProvider->oauthTokenSecret;
+$clientProvider->oauthExpiresAt;
 ```
 
-You then have to store $newTokenDetails (a value object - just pull out what
-you need or store the whole thing) and rebuild the client.
 That may be more convenient to do, but be aware that unless you set a guard time,
 there may be times when you miss an expiry and the request will return an expired
 token error.
