@@ -213,7 +213,7 @@ class OAuthParams implements \JsonSerializable
             // remove this check, since it will almost always be true at the typical times we
             // would want to check it.
 
-            return true;
+            //return true;
         }
 
         // Not expired, given the information we have.

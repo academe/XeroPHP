@@ -228,7 +228,7 @@ class ClientProvider
      * @param array $oauth1Options Override any default OAuth1 handler options.
      * @return Client
      */
-    public function getAccessClient(array $options = [], array $oauth1Options = [])
+    public function getAccessClient(array $options = [])
     {
         // The cache key is unique to the arguments passed in.
         $index = md5('getAccessClient' . json_encode(func_get_args()));
@@ -253,7 +253,9 @@ class ClientProvider
             ],
         ];
 
-        $clientOptions = array_merge_recursive(
+        // FIXME: This is not working correctly. A scalar does not overwrite another scalar, but
+        // instead replaces the scalar with an array.
+        $clientOptions = array_replace_recursive(
             $clientOptions,
             $this->clientOptions,
             isset($options['clientOptions']) ? $options['clientOptions'] : []
@@ -285,7 +287,7 @@ class ClientProvider
             'private_key_passphrase' => null,
         ];
 
-        $oauth1Options = array_merge_recursive(
+        $oauth1Options = array_replace_recursive(
             $oauth1Options,
             $this->oauth1Options,
             $options
