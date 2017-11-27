@@ -37,6 +37,13 @@ This package does not care what you use at the front end obtain those tokens.
 The two packages recommended above to do this are reliable, well documented,
 and focus on just getting that one job done.
 
+I am mostly focusing on getting this working for the Xero Partner app, as it must
+be trusted to just keep on running as a scheduled process without losing the tokens
+and needing a user to re-authenticate. Once a Partner app has been authorised, it
+should be theory be able to access the Xero account for 10 years, refreshing every
+30 minutes. In reality, tokens will get lost - even Xero has downtime that can
+result in lost authentication tokens.
+
 Areas to Complete (TODO)
 ------------------------
 
@@ -54,24 +61,24 @@ use use Academe\XeroPHP;
 
 // Most of the configuration goes into one place.
 
-$myStorageObject = /* OAuth token storage object */
+$myStorageObject = /* Your OAuth token storage object */
 
 $clientProvider = new XeroPHP\ClientProvider([
     // Account credentials.
     'consumerKey'       => 'your-consumer-key',
     'consumerSecret'    => 'your-consumer-sectet',
     // Current token and secret from storage.
-    'oauthToken'            => $myStorageObject->oauth_token,
-    'oauthTokenSecret'      => $myStorageObject->oauth_token_secret,
+    'oauthToken'            => $myStorageObject->oauthToken,
+    'oauthTokenSecret'      => $myStorageObject->oauthTokenSecret,
     // Curresnt session for refreshes also from storage.
-    'oauthSessionHandle'    => $myStorageObject->oauth_session_handle,
+    'oauthSessionHandle'    => $myStorageObject->oauthSessionHandle,
     // The local time the OAuth token is expected to expire.
-    'oauthExpiresAt'        => $myStorageObject->oauthExpiresAt,
+    'oauthExpiresAt'        => $myStorageObject->oauthExpiresAt, // Carbon, Datetime or string
     // Running the Partner Application
     'oauth1Options' => [
-        'signature_method' => \GuzzleHttp\Subscriber\Oauth\Oauth1::SIGNATURE_METHOD_RSA,
+        'signature_method' => \GuzzleHttp\Subscriber\Oauth\Oauth1::SIGNATURE_METHOD_RSA, // Default
         'private_key_file' => 'local/path/to/private.pem',
-        'private_key_passphrase' => 'your-optional-passphrase',
+        'private_key_passphrase' => 'your-optional-passphrase', // Optional
     ],
     'clientOptions' => [
         // You will almost always want exceptions off, so Guzzle does not throw an exception
@@ -101,15 +108,17 @@ $clientProvider = new XeroPHP\ClientProvider([
 ]);
 
 // Get a plain Guzzle client, with appropriate settings.
+// Can pass in an options array to override any of the options set up in
+// the `$clientProvider`.
 $refreshableClient = $clientProvider->getRefreshableClient();
 ```
 
 Now we have a client to send requests.
-This is a refreshable client, so if using the Partner app, it will refresh its token
+This is a refreshable client, so if using the Xero Partner app, it will refresh its token
 automatically when it expires and inform your application via the `tokenRefreshCallback`.
 
-After sending a request, you can check if the token was refreshed and rebuild the client
-for any further requests on the page:
+After sending a request, you can check if the token was refreshed for any action you may
+want to perform as a result:
 
 ```php
 if ($refreshableClient->tokenIsRefreshed()) {
@@ -118,7 +127,7 @@ if ($refreshableClient->tokenIsRefreshed()) {
 ```
 
 If the token is refreshed, then the new token will have been stored by your app through
-the callback.
+the `tokenRefreshCallback`.
 
 If you want to refresh the tokens explicitly, before you hit an expired token response,
 then it can be done like this:
@@ -140,6 +149,18 @@ $clientProvider->oauthExpiresAt;
 That may be more convenient to do, but be aware that unless you set a guard time,
 there may be times when you miss an expiry and the request will return an expired
 token error.
+
+You may want to check that the expiry time is approaching on each run, and renew the
+token explicitely. This check can be used to see if we have entered a "guard window"
+preceding the expected expiry time:
+
+```php
+// A guard window of five minutes (300 seconds).
+// If we have entered the last 300 seconds of the token lifetime, then renew it.
+if ($refreshableClient->isExpired(60*5)) {
+    $refreshableClient->refreshToken();
+}
+```
 
 The Results Object
 ------------------
