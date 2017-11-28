@@ -6,6 +6,7 @@ namespace Academe\XeroPHP;
  * Collecton of resources.
  */
 
+use Carbon\Carbon;
 use Exception;
 
 class Resource implements \Countable, \JsonSerializable //\Iterator,
@@ -80,7 +81,15 @@ class Resource implements \Countable, \JsonSerializable //\Iterator,
      */
     public function jsonSerialize()
     {
-        return $this->toArray();
+        $array = $this->toArray();
+
+        array_walk_recursive($array, function (&$value, $key) {
+            if ($value instanceof Carbon) {
+                $value = (string)$value;
+            }
+        });
+
+        return $array;
     }
 
     /**
@@ -151,5 +160,20 @@ class Resource implements \Countable, \JsonSerializable //\Iterator,
         return $default === null
             ? new static([], $name, $this)
             : $default;
+    }
+
+    /**
+     * An empty resource will be returned as an empty string, otherwise a JSON
+     * encoded string.
+     *
+     * @return string
+     */
+    public function __tostring()
+    {
+        if ($this->isEmpty()) {
+            return '';
+        }
+
+        return json_encode($this);
     }
 }

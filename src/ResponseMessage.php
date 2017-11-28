@@ -53,7 +53,7 @@ class ResponseMessage implements \Iterator, \Countable, \JsonSerializable
         // If the data is a HTTP response, then parse the data out from that.
 
         if ($data instanceof ResponseInterface) {
-            $data = Helper::parseResponse($data, $statusCode);
+            $data = Helper::parseResponse($data, $statusCode); // FIXME $statusCode!
         }
 
         if (! is_array($data)) {
@@ -111,7 +111,15 @@ class ResponseMessage implements \Iterator, \Countable, \JsonSerializable
      */
     public function jsonSerialize()
     {
-        return $this->toArray();
+        $array = $this->toArray();
+
+        array_walk_recursive($array, function (&$value, $key) {
+            if ($value instanceof Carbon) {
+                $value = (string)$value;
+            }
+        });
+
+        return $array;
     }
 
     /**
@@ -496,5 +504,20 @@ class ResponseMessage implements \Iterator, \Countable, \JsonSerializable
     public function isError()
     {
         return false;
+    }
+
+    /**
+     * An empty resource will be returned as an empty string, otherwise a JSON
+     * encoded string.
+     *
+     * @return string
+     */
+    public function __tostring()
+    {
+        if ($this->isEmpty()) {
+            return '';
+        }
+
+        return json_encode($this);
     }
 }

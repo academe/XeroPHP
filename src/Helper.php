@@ -82,9 +82,9 @@ class Helper
     /**
      * Convert a parsed response array to a nested ResponseData instance.
      */
-    public static function arrayToModel($data)
+    public static function responseToModel($data)
     {
-        return new ResponseData($data);
+        return new ResponseMessage($data);
     }
 
     /**

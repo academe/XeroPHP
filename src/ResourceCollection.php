@@ -81,7 +81,15 @@ class ResourceCollection implements \Countable, \Iterator, \JsonSerializable
      */
     public function jsonSerialize()
     {
-        return $this->toArray();
+        $array = $this->toArray();
+
+        array_walk_recursive($array, function (&$value, $key) {
+            if ($value instanceof Carbon) {
+                $value = (string)$value;
+            }
+        });
+
+        return $array;
     }
 
     /**
@@ -135,5 +143,20 @@ class ResourceCollection implements \Countable, \Iterator, \JsonSerializable
         }
 
         return $this->items[$this->iteratorPosition];
+    }
+
+    /**
+     * An empty resource will be returned as an empty string, otherwise a JSON
+     * encoded string.
+     *
+     * @return string
+     */
+    public function __tostring()
+    {
+        if ($this->isEmpty()) {
+            return '';
+        }
+
+        return json_encode($this);
     }
 }
