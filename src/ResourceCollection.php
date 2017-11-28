@@ -93,6 +93,22 @@ class ResourceCollection implements \Countable, \Iterator, \JsonSerializable
     }
 
     /**
+     * @return bool True - a collection is always a collection.
+     */
+    public function isCollection()
+    {
+        return true;
+    }
+
+    /**
+     * @return bool False - a collecrtion is never a resource.
+     */
+    public function isResource()
+    {
+        return false;
+    }
+
+    /**
      * For interface Countable.
      * The data provided is empty - no resource, no resource list and no metadata.
      */

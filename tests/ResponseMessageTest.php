@@ -316,4 +316,236 @@ class ResponseMessageTest extends TestCase
         // Some errors will contain a collection of individual errors for all the fields that have
         // an input issue.
     }
+
+    /**
+     * Properties of the GB Payroll Employees resource collection.
+     */
+    public function testGbPayrollEmployeesResources()
+    {
+        $message = $this->gbPayrollEmployees;
+        $collection = $message->getCollection();
+
+        $this->assertEquals($message->isCollection(), true);
+        $this->assertEquals($message->isEmpty(), false);
+        //$this->assertEquals($message->hasParent(), true); // TBC
+
+        $this->assertEquals($message->count(), 2);
+        $this->assertEquals(count($message), 2);
+
+        $this->assertEquals($collection->count(), 2);
+        $this->assertEquals(count($collection), 2);
+    }
+
+    /**
+     * Properties of the GB Payroll Employees resource collection as a single employee.
+     */
+    public function testGbPayrollEmployeesResource()
+    {
+        $message = $this->gbPayrollEmployees;
+        $resource = $message->getResource();
+
+        $this->assertEquals($message->isCollection(), true);
+        $this->assertEquals($message->isEmpty(), false);
+
+        $this->assertEquals($resource->isCollection(), false);
+
+        //$this->assertEquals($resource->hasParent(), true); // TBC
+
+        // Although there are two resources in the message collection...
+        $this->assertEquals($message->count(), 2);
+        $this->assertEquals(count($message), 2);
+
+        // ...counting the first collection alone gives us a count of just one.
+        $this->assertEquals($resource->count(), 1);
+        $this->assertEquals(count($resource), 1);
+    }
+
+    /**
+     * Properties of the GB Payroll single Employee resource as a collection.
+     */
+    public function testGbPayrollEmployeeResources()
+    {
+        $resources = $this->gbPayrollEmployee->getCollection();
+
+        $this->assertEquals($resources->isCollection(), true);
+        $this->assertEquals($resources->isEmpty(), false);
+        //$this->assertEquals($resources->hasParent(), true); // TBC
+
+        $this->assertEquals($resources->count(), 1);
+        $this->assertEquals(count($resources), 1);
+    }
+
+    /**
+     * Properties of the GB Payroll single Employee resource.
+     */
+    public function testGbPayrollEmployeeResource()
+    {
+        $resource = $this->gbPayrollEmployee->getResource();
+
+        $this->assertEquals($resource->isCollection(), false);
+        $this->assertEquals($resource->isEmpty(), false);
+        //$this->assertEquals($resource->hasParent(), true); // TBC
+
+        $this->assertEquals($resource->count(), 1);
+        $this->assertEquals(count($resource), 1);
+    }
+
+    // 
+
+    /**
+     * Properties of the root Accounting Payments collection response.
+     */
+    public function testAccountingPaymentsRoot2()
+    {
+        $payments = $this->accountingPayments;
+
+        $this->assertEquals($payments->isCollection(), true);
+        $this->assertEquals($payments->isEmpty(), false);
+        //$this->assertEquals($payments->hasParent(), false); // TBC
+
+        $this->assertEquals($payments->count(), 3);
+        $this->assertEquals(count($payments), 3);
+    }
+
+    /**
+     * Properties of the Accounting 2.0 Payments resource as a collection.
+     */
+    public function testAccountingPaymentsResources()
+    {
+        $resources = $this->accountingPayments->getCollection();
+
+        $this->assertEquals($resources->isCollection(), true);
+        $this->assertEquals($resources->isEmpty(), false);
+        //$this->assertEquals($resources->hasParent(), true); // TBC
+
+        $this->assertEquals($resources->count(), 3);
+        $this->assertEquals(count($resources), 3);
+    }
+
+    /**
+     * Properties of the Accounting 2.0 single Payment resource.
+     */
+    public function testAccountingPaymentsResource()
+    {
+        $resource = $this->accountingPayments->getResource();
+
+        $this->assertEquals($resource->isCollection(), false);
+        $this->assertEquals($resource->isEmpty(), false);
+        //$this->assertEquals($resource->hasParent(), true); // TBC
+
+        $this->assertEquals($resource->count(), 1);
+        $this->assertEquals(count($resource), 1);
+    }
+
+    // 
+
+    /**
+     * Properties of the root Accounting single Payment response.
+     */
+    public function testAccountingPaymentRoot()
+    {
+        $payment = $this->accountingPayment;
+
+        // The response puts a single payment into an array, so it will always
+        // look like a collection, even though it is not. No other metdata gives
+        // any clues that this is the result from a single payment request.
+        // Now, if the message contains a single resource in an ambigyous collection,
+        // then should we ALSO return true for isResource()? This would only apply if
+        // there is no evidence of a pagination object.
+        $this->assertEquals($payment->isCollection(), true);
+        $this->assertEquals($payment->isEmpty(), false);
+        //$this->assertEquals($payment->hasParent(), false); // TBC
+
+        $this->assertEquals($payment->count(), 1);
+        $this->assertEquals(count($payment), 1);
+    }
+
+    /**
+     * Properties of the Accounting 2.0 singlePayments resource as a collection.
+     */
+    public function testAccountingPaymentResources()
+    {
+        $resources = $this->accountingPayment->getCollection();
+
+        $this->assertEquals($resources->isCollection(), true);
+        $this->assertEquals($resources->isEmpty(), false);
+        //$this->assertEquals($resources->hasParent(), true); // TBC
+
+        $this->assertEquals($resources->count(), 1);
+        $this->assertEquals(count($resources), 1);
+    }
+
+    /**
+     * Properties of the Accounting 2.0 single Payment resource.
+     */
+    public function testAccountingPaymentResource()
+    {
+        $resource = $this->accountingPayment->getResource();
+
+        $this->assertEquals($resource->isCollection(), false);
+        $this->assertEquals($resource->isEmpty(), false);
+        //$this->assertEquals($resource->hasParent(), true); // TBC
+
+        $this->assertEquals($resource->count(), 1);
+        $this->assertEquals(count($resource), 1);
+    }
+
+    //
+
+    /**
+     * Fetching payments with a filter matching no results.
+     */
+    public function testAccountingPaymentNoMatchBase()
+    {
+        $accountingPaymentsNoMatch = $this->accountingPaymentsNoMatch;
+
+        // The response contains an empty resource array, so we know it is a
+        // collection, even if it is empty.
+        $this->assertEquals($accountingPaymentsNoMatch->isCollection(), true);
+        // Note: the message is not empty...
+        $this->assertEquals($accountingPaymentsNoMatch->isEmpty(), false);
+        // ...but the collection it carries IS empty.
+        $this->assertEquals($accountingPaymentsNoMatch->getCollection()->isEmpty(), true);
+        //$this->assertEquals($accountingPaymentsNoMatch->hasParent(), false); // TBC
+
+        $this->assertEquals($accountingPaymentsNoMatch->count(), 0);
+        $this->assertEquals(count($accountingPaymentsNoMatch), 0);
+    }
+
+    /**
+     * Properties of the Accounting 2.0 non-matching Payments resource collection.
+     */
+    public function testAccountingPaymentNoMatchResources()
+    {
+        $resources = $this->accountingPaymentsNoMatch->getCollection();
+
+        $this->assertEquals($resources->isCollection(), true);
+        $this->assertEquals($resources->isEmpty(), true);
+        //$this->assertEquals($resources->hasParent(), true); // TBC
+
+        $this->assertEquals($resources->count(), 0);
+        $this->assertEquals(count($resources), 0);
+    }
+
+    /**
+     * Properties of the Accounting 2.0 non-matching Payments resource collection as a single payment.
+     */
+    public function testAccountingPaymentNoMatchResource()
+    {
+        $resource = $this->accountingPaymentsNoMatch->getResource();
+
+        // The resource here is null, because we have fetched a resource from
+        // an empty collection. Should we do this? Or should we return an
+        // empty resource? Just not sure how it is going to be used.
+        // We'll plant the flag here now, and revisit at some point.
+
+        $this->assertNull($resource);
+
+        //$this->assertEquals($resource->isCollection(), false);
+        //$this->assertEquals($resource->isEmpty(), true);
+        // $this->assertEquals($resources->hasParent(), true); // TBC
+
+        //$this->assertEquals($resources->count(), 0);
+        //$this->assertEquals(count($resources), 0);
+    }
 }

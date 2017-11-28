@@ -131,6 +131,22 @@ class Resource implements \Countable, \JsonSerializable //\Iterator,
     }
 
     /**
+     * @return bool False - a resource is never a collection.
+     */
+    public function isCollection()
+    {
+        return false;
+    }
+
+    /**
+     * @return bool True - a resource is always a resource.
+     */
+    public function isResource()
+    {
+        return true;
+    }
+
+    /**
      * @param moxed $default Will return this value if property not present or delivered as null
      * @return mixed
      */
