@@ -88,7 +88,8 @@ class Helper
     }
 
     /**
-     * @return bool true if the data is an associative array.
+     * @param array $data the array to test
+     * @return bool true if the data is an associative (non-numeric keyed) array.
      */
     public static function isAssociativeArray(array $data)
     {
@@ -98,6 +99,10 @@ class Helper
     }
 
     /**
+     * The keys do not need to be contiguous, and nowhere do we assume
+     * continugous numeric keys in any array.
+     *
+     * @param array $data the array to test
      * @return bool true if the data is a numeric keyed array.
      */
     public static function isNumericArray(array $data)

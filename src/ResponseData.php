@@ -3,7 +3,8 @@
 namespace Academe\XeroPHP;
 
 /**
- * TODO: special handling for pagination where available.
+ * @deprecated DEPRECATED - will be removed soon, when I've stripped out
+ * all the good stuff and moved its tests over to the ResponseMessage class.
  */
 
 use Carbon\Carbon;

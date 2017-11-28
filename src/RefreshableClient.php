@@ -92,19 +92,7 @@ class RefreshableClient
      */
     public function getOAuthParams(Response $response)
     {
-        // All OAuth responses from Xero have a content type of text/html.
-        // Maybe this will change one day, so keep an eye on this.
-        // "application/x-www-form-urlencoded" seems like it would be more appropriate,
-        // though that's usually for posting a request.
-
-        if (substr($response->getHeaderLine('content-type'), 0, 9) === 'text/html') {
-            $body = $response->getBody()->getContents();
-            parse_str($body, $parts);
-        } else {
-            $parts = [];
-        }
-
-        return new OAuthParams($parts);
+        return new OAuthParams($response);
     }
 
     public function getClientProvider()
@@ -221,12 +209,15 @@ class RefreshableClient
 
         // Everything is already set for the refresh client; just make the request.
 
-        $refresh_result = $refresh_client->get(null);
+        $refresh_result = $refresh_client->get('');
 
         $refreshedToken = $this->getOAuthParams($refresh_result);
 
         if (! $refreshedToken->hasToken()) {
             // Failed to renew the tokens.
+            // If we failed to refresh it, then bail out now so we don't change what
+            // token has been stored.
+
             throw new \Exception(sprintf(
                 'Token refresh error "%s": %s',
                 $refreshedToken->oauth_problem,
@@ -245,9 +236,10 @@ class RefreshableClient
 
         $this->clientProvider = $this->clientProvider->withFreshToken($this->refreshedToken);
 
-        // Rebuild the client, using whatever initial options were provided when the
-        // provider was first created.
-        // Reuse the options we saved when the refreshable client was first created.
+        // Rebuild the client stack (the token detaisl will be right at the bottom of
+        // this stack, which is why it all needs to be rebuilt).
+        // Reuse the options we saved when the refreshable client was first created,
+        // to try to keep the same state.
 
         $this->client = $this->clientProvider->getRefreshableClient(
             $this->clientProvider->lastRefreshableClientOptions
