@@ -10,12 +10,13 @@ namespace Academe\XeroPHP;
 
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Subscriber\Oauth\OAuth1;
+use Psr\Http\Message\RequestInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
 use Carbon\Carbon;
 
-class RefreshableClient
+class RefreshableClient implements ClientInterface
 {
     /**
      * @var ClientInterface
@@ -259,5 +260,37 @@ class RefreshableClient
         $remainingSeconds = Carbon::now()->diffInSeconds($this->clientProvider->oauthExpiresAt, false);
 
         return ($remainingSeconds - $guardSeconds) < 0;
+    }
+
+    /**
+     * @inherit Pass-through method
+     */
+    public function send(RequestInterface $request, array $options = [])
+    {
+        return $this->requester->send($request, $options);
+    }
+
+    /**
+     * @inherit Pass-through method
+     */
+    public function sendAsync(RequestInterface $request, array $options = [])
+    {
+        return $this->requester->sendAsync($request, $options);
+    }
+
+    /**
+     * @inherit Pass-through method
+     */
+    public function requestAsync($method, $uri, array $options = [])
+    {
+        return $this->requester->requestAsync($method, $uri, $options);
+    }
+
+    /**
+     * @inherit Pass-through method
+     */
+    public function getConfig($option = null)
+    {
+        return $this->requester->getConfig($option);
     }
 }
