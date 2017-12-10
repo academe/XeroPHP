@@ -1,4 +1,8 @@
 [![Build Status](https://travis-ci.org/academe/XeroPHP.svg?branch=master)](https://travis-ci.org/academe/XeroPHP)
+[![Latest Stable Version](https://poser.pugx.org/academe/xero-php/v/stable)](https://packagist.org/packages/academe/xero-php)
+[![Total Downloads](https://poser.pugx.org/academe/xero-php/downloads)](https://packagist.org/packages/academe/xero-php)
+[![Latest Unstable Version](https://poser.pugx.org/academe/xero-php/v/unstable)](https://packagist.org/packages/academe/xero-php)
+[![License](https://poser.pugx.org/academe/xero-php/license)](https://packagist.org/packages/academe/xero-php)
 
 XeroPHP API OAuth Access
 ========================
