@@ -33,6 +33,17 @@ does coordinate them:
 * Knowledge of how to navigate the results is left with your application.
   However, the generic nested data object that the response builds, helps to do this.
 
+This package differs from the excellent [calcinai/xero-php](https://github.com/calcinai/xero-php)
+package in the following fundamental ways:
+
+* It does not get involved in the process of OAuth authorisation with the end user.
+  You need to handle that yourself.
+* It does not have fixed models for the responses, but uses a generic model structure
+  for resources and collections of resources.
+* The UK Payroll v2.0 API is supported by this package.
+
+Which package best suites you, will depend on your use-case. Each have pros and cons.
+
 This package needs the OAuth token and secret gained through authorisation
 to access the API, and the session handler token if automatic refreshing is
 needed for the Partner Application.
