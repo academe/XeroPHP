@@ -12,12 +12,12 @@ This library tackles the following parts of Xero API access:
 
 * Coordinating the OAuth layer to provide secure access.
 * Automatically refreshing expired tokens (for Partner Applications).
-* Parsing the response into a generic nested object.
+* Parsing the response into general nested objects.
 
 This package leaves these functions for other packages to handle, thought
 does coordinate them:
 
-* All HTTP communications through [Guzzle 6]().
+* All HTTP communications through [Guzzle 6](https://github.com/guzzle/guzzle).
 * OAuth request signing to
   [Guzzle OAuth Subscriber](https://github.com/guzzle/oauth-subscriber)
 * OAuth authentication recommended through
@@ -27,20 +27,21 @@ does coordinate them:
 * Storage of the OAuth tokens to your own application.
   A hook is provided so that refreshed tokens can be updated in storage.
 * Knowledge of how to navigate the results is left with your application.
-  The generic nested data object helps to do this.
+  However, the generic nested data object that the response builds, helps to do this.
 
 This package needs the OAuth token and secret gained through authorisation
 to access the API, and the session handler token if automatic refreshing is
 needed for the Partner Application.
 
-This package does not care what you use at the front end obtain those tokens.
+This package does not care what you use at the front end to obtain those tokens.
 The two packages recommended above to do this are reliable, well documented,
 and focus on just getting that one job done.
 
-I am mostly focusing on getting this working for the Xero Partner app, as it must
-be trusted to just keep on running as a scheduled process without losing the tokens
-and needing a user to re-authenticate. Once a Partner app has been authorised, it
-should be theory be able to access the Xero account for 10 years, refreshing every
+I am mostly focusing on getting this working for the Xero Partner app, as I need
+a robust librayr that just keeps on running as a scheduled process without losing
+the tokens and needing a user to re-authenticate.
+Once a Partner app has been authorised, it
+should in theory be able to access the Xero account for 10 years, refreshing every
 30 minutes. In reality, tokens will get lost - even Xero has downtime that can
 result in lost authentication tokens.
 
@@ -51,6 +52,10 @@ Areas to Complete (TODO)
   Writing to the API should be supported, but has not gone through any testing
   at this stage.
 * Lots more documentation and examples.
+* More consistent handling of errors. The application should not have to go huntiong
+  to find out if the error is in the configuration, the network, the remote application,
+  the syntax of the request etc. Those details should all be handed to the application
+  on a plate.
 
 Quick Start
 -----------
@@ -109,6 +114,7 @@ $clientProvider = new XeroPHP\ClientProvider([
 // Get a plain Guzzle client, with appropriate settings.
 // Can pass in an options array to override any of the options set up in
 // the `$clientProvider`.
+
 $refreshableClient = $clientProvider->getRefreshableClient();
 ```
 
@@ -136,13 +142,16 @@ then it can be done like this:
 
 $clientProvider = $refreshableClient->refreshToken();
 
+// Use the new $clientProvider if you want to create additional refreshable clients.
+// Otherwise just keep using the current $refreshableClient.
+
 // The `$refreshableClient` will now have a new Guzzzle client with a refreshed token.
 // The new token details are retrieved from the provider, and can then be stored,
 // assuming your callback has not already stored it. Store these three details:
 
-$clientProvider->oauthToken;
-$clientProvider->oauthTokenSecret;
-$clientProvider->oauthExpiresAt;
+$clientProvider->oauthToken;        // String
+$clientProvider->oauthTokenSecret;  // String
+$clientProvider->oauthExpiresAt;    // Carbon time
 ```
 
 That may be more convenient to do, but be aware that unless you set a guard time,
@@ -150,12 +159,14 @@ there may be times when you miss an expiry and the request will return an expire
 token error.
 
 You may want to check that the expiry time is approaching on each run, and renew the
-token explicitely. This check can be used to see if we have entered a "guard window"
+token explicitly. This check can be used to see if we have entered a "guard window"
 preceding the expected expiry time:
 
 ```php
 // A guard window of five minutes (300 seconds).
-// If we have entered the last 300 seconds of the token lifetime, then renew it.
+// If we have entered the last 300 seconds of the token lifetime,
+// then renew it immediately.
+
 if ($refreshableClient->isExpired(60*5)) {
     $refreshableClient->refreshToken();
 }
