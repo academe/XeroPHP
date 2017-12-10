@@ -4,6 +4,7 @@
     "description": "A client implementation of the Xero API, supplying raw data.",
     "homepage": "https://github.com/academe/XeroPHP",
     "license": "MIT",
+    "keywords": ["xero", "api", "json", "guzzle", "rest-api", "xero-api", "oauth", "xero-provider"],
     "authors": [
         {
             "name": "Jason Judge",
