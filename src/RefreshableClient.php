@@ -18,9 +18,9 @@ use Carbon\Carbon;
 class RefreshableClient
 {
     /**
-     * @var Client
+     * @var ClientInterface
      */
-    protected $client;
+    protected $requester;
 
     /**
      * @var ClientProvider
@@ -37,9 +37,9 @@ class RefreshableClient
      */
     protected $refreshedToken;
 
-    public function __construct(ClientInterface $client, ClientProvider $clientProvider)
+    public function __construct(ClientInterface $requester, ClientProvider $clientProvider)
     {
-        $this->client = $client;
+        $this->requester = $requester;
         $this->clientProvider = $clientProvider;
     }
 
@@ -59,11 +59,11 @@ class RefreshableClient
         // local request method if we have a handle.
 
         return substr($method, -5) === 'Async'
-            ? $this->client->requestAsync(substr($method, 0, -5), $uri, $opts)
+            ? $this->requester->requestAsync(substr($method, 0, -5), $uri, $opts)
             : (
                 $this->clientProvider->oauthSessionHandle
                 ? $this->request($method, $uri, $opts)
-                : $this->client->request($method, $uri, $opts)
+                : $this->requester->request($method, $uri, $opts)
             );
     }
 
@@ -129,7 +129,7 @@ class RefreshableClient
         }
 
         try {
-            $response = $this->client->request($method, $uri, $options);
+            $response = $this->requester->request($method, $uri, $options);
 
             // Here check if the response indicates the tokens have expired.
             // So long as we get the expired error, then we know we can renew that token.
@@ -201,7 +201,7 @@ class RefreshableClient
      *
      * Once refreshed, this client should be discarded and rebuilt from scratch.
      *
-     * @return clientProvider The new clientProvider used to create a new client.
+     * @return clientProvider The new clientProvider used to create a new requester.
      */
     public function refreshToken()
     {
@@ -241,7 +241,7 @@ class RefreshableClient
         // Reuse the options we saved when the refreshable client was first created,
         // to try to keep the same state.
 
-        $this->client = $this->clientProvider->getRefreshableClient(
+        $this->requester = $this->clientProvider->getRefreshableClient(
             $this->clientProvider->lastRefreshableClientOptions
         );
 

@@ -15,7 +15,7 @@ namespace Academe\XeroPHP;
 
 use GuzzleHttp\Subscriber\Oauth\Oauth1;
 use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Client;
+use GuzzleHttp\Client as GuzzleClient;
 
 class ClientProvider
 {
@@ -62,12 +62,12 @@ class ClientProvider
     protected $oauth1Options = [];
 
     /**
-     * @var Additional options for the client.
+     * @var Additional options for the HTTP client.
      */
     protected $clientOptions = [];
 
     /**
-     * @var Cached HTTP client cache.
+     * @var Cached HTTP clients for resuse on multiple requests.
      */
     protected $clients = [];
 
@@ -171,7 +171,7 @@ class ClientProvider
     }
 
     /**
-     * @param array $options Additional OAuth1 handler options.
+     * @param array $options Additional HTTP requester options.
      */
     protected function setClientOptions(array $options)
     {
@@ -181,20 +181,22 @@ class ClientProvider
 
     /**
      * @param array $options Options for the underlying AccessClient
+     * @return Client A refreshable HTTP client
      */
     public function getRefreshableClient(array $options = [])
     {
         $this->lastRefreshableClientOptions = $options;
 
-        $accessClient = $this->getAccessClient($options);
+        $accessRequester = $this->getAccessClient($options);
 
-        $renewableClient = new RefreshableClient($accessClient, $this);
-        return $renewableClient;
+        return new RefreshableClient($accessRequester, $this);
     }
 
     /**
      * The refresh client is similar to the access client, but with the
      * token fields in the query string.
+     *
+     * @return GuzzleClient
      */
     public function getRefreshClient()
     {
@@ -226,7 +228,7 @@ class ClientProvider
      *
      * @param array $options Override any default client options.
      * @param array $oauth1Options Override any default OAuth1 handler options.
-     * @return Client
+     * @return GuzzleClient
      */
     public function getAccessClient(array $options = [])
     {
@@ -237,7 +239,11 @@ class ClientProvider
             return $this->clients[$index];
         }
 
-        $oauth1 = $this->createOAuth1Handler(isset($options['oauth1Options']) ? $options['oauth1Options'] : []);
+        $oauth1 = $this->createOAuth1Handler(
+            isset($options['oauth1Options'])
+            ? $options['oauth1Options']
+            : []
+        );
 
         $stack = $this->createStack($oauth1);
 
@@ -253,15 +259,13 @@ class ClientProvider
             ],
         ];
 
-        // FIXME: This is not working correctly. A scalar does not overwrite another scalar, but
-        // instead replaces the scalar with an array.
         $clientOptions = array_replace_recursive(
             $clientOptions,
             $this->clientOptions,
             isset($options['clientOptions']) ? $options['clientOptions'] : []
         );
 
-        $client = new Client($clientOptions);
+        $client = new GuzzleClient($clientOptions);
 
         $this->clients[$index] = $client;
 
