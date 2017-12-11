@@ -19,7 +19,7 @@ class HelperTest extends TestCase
             '2017-01-01T23:59:59+00:00' => '2017-01-01 23:59:59',
             '2017-01-01T00:00:00+00:00' => '2017-01-01 00:00:00',
             '2017-10-31T12:47:42+00:00' => '/Date(1509454062181)/',
-            '2015-08-17T13:15:04+01:00' => '/Date(1439813704613+0000)/',
+            '2015-08-17T12:15:04+00:00' => '/Date(1439813704613+0000)/',
             '2017-10-20T15:04:50+00:00' => '2017-10-20T16:04:50',
             '2017-10-31T12:50:15+00:00' => '2017-10-31T12:50:15.9920037',
             '2017-09-24T23:00:00+00:00' => '2017-09-25T00:00:00',
@@ -35,7 +35,7 @@ class HelperTest extends TestCase
             $dateCarbon = Helper::toCarbon($date);
 
             $this->assertInstanceOf(Carbon::class, $dateCarbon);
-            $this->assertSame($formatted, $dateCarbon->toRfc3339String());
+            $this->assertSame($formatted, $dateCarbon->timezone('UTC')->toRfc3339String());
         }
     }
 
