@@ -22,16 +22,16 @@ class ClientProvider
     /**
      * Supported "Accept" header values.
      */
-     const HEADER_ACCEPT_JSON   = 'application/json';
-     const HEADER_ACCEPT_PDF    = 'application/pdf';
-     const HEADER_ACCEPT_XML    = 'application/xml';
+    const HEADER_ACCEPT_JSON   = 'application/json';
+    const HEADER_ACCEPT_PDF    = 'application/pdf';
+    const HEADER_ACCEPT_XML    = 'application/xml';
 
     /**
      * How long we will wait for a response when refreshing a token.
      * This is critical to prevent breaking the token chain, so we give a
      * slow Xero as long as we can.
      */
-     const TOKEN_REFRESH_TIMEOUT_SECONDS = 60;
+    const TOKEN_REFRESH_TIMEOUT_SECONDS = 60;
 
     /**
      * @var Pre-shared key and secret for signing.
@@ -92,7 +92,7 @@ class ClientProvider
     }
 
     /**
-     * Clear the client cache in a clone, as properties are changing.
+     * Clear the client cache in a clone, since properties are changing.
      */
     public function __clone()
     {
@@ -181,7 +181,7 @@ class ClientProvider
 
     /**
      * @param array $options Options for the underlying AccessClient
-     * @return Client A refreshable HTTP client
+     * @return RefreshableClient A refreshable HTTP client
      */
     public function getRefreshableClient(array $options = [])
     {

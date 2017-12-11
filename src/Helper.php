@@ -8,6 +8,7 @@ namespace Academe\XeroPHP;
 
 use Psr\Http\Message\ResponseInterface;
 use Carbon\Carbon;
+use DateTime;
 
 class Helper
 {
@@ -51,11 +52,16 @@ class Helper
             // This check may have to gom as it throws out, for example, OAuth expiry
             // times that may have been retrieved from the database as strings.
 
-            if (! preg_match('/\-[0-9]{2,2}[T ][0-9]{2,2}:/', $item)) {
-                return $item;
-            }
+            $otherFormats = [
+                '/\-[0-9]{2}[T ][0-9]{2}:/',
+                '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/',
+            ];
 
-            return Carbon::parse($item)->setTimezone('UTC');
+            foreach ($otherFormats as $otherFormat) {
+                if (preg_match($otherFormat, $item)) {
+                    return Carbon::parse($item)->setTimezone('UTC');
+                }
+            }
         }
 
         return $item;
