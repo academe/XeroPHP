@@ -94,6 +94,8 @@ class Helper
     }
 
     /**
+     * An empty array is not associative.
+     *
      * @param array $data the array to test
      * @return bool true if the data is an associative (non-numeric keyed) array.
      */
@@ -106,16 +108,17 @@ class Helper
 
     /**
      * The keys do not need to be contiguous, and nowhere do we assume
-     * continugous numeric keys in any array.
+     * contiguous numeric keys in any array.
+     * An empty array is not numerically keyed.
      *
      * @param array $data the array to test
      * @return bool true if the data is a numeric keyed array.
      */
     public static function isNumericArray(array $data)
     {
-        return count(
+        return count($data) > 0 && count(
             array_filter(array_keys($data), 'is_numeric')
-        ) > 0;
+        ) === count($data);
     }
 
     /**
@@ -195,7 +198,7 @@ class Helper
     }
 
     /**
-     * Parse a data item.
+     * Parse a data item, i.e. a resource or resposne property.
      *
      * @parem mixed $data
      * @return mixed Return Collection, Resource, Carbon or scalar value

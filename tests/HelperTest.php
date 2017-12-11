@@ -31,7 +31,7 @@ class HelperTest extends TestCase
             '2017-10-31T12:47:42+00:00' => 1509454062,
         ];
 
-        foreach($dates as $formatted => $date) {
+        foreach ($dates as $formatted => $date) {
             $dateCarbon = Helper::toCarbon($date);
 
             $this->assertInstanceOf(Carbon::class, $dateCarbon);
@@ -54,10 +54,72 @@ class HelperTest extends TestCase
             new static,
         ];
 
-        foreach($dates as $value) {
+        foreach ($dates as $value) {
             $nonDate = Helper::toCarbon($value);
 
             $this->assertNotInstanceOf(Carbon::class, $nonDate);
         }
     }
+
+    public function testSnakeToCamel()
+    {
+        $names = [
+            'snacksOnAPlane' => 'snacks_on_a_plane',
+            'snacksOnAPlane' => 'Snacks_On_a_Plane',
+            'snacksOnAPlane' => 'SnacksOn_aPlane',
+        ];
+
+        foreach ($names as $expected => $source) {
+            $this->assertSame($expected, Helper::snakeToCamel($source));
+        }
+    }
+
+    public function testResponseToModel()
+    {
+        $this->assertInstanceOf(ResponseMessage::class, Helper::responseToModel([]));
+    }
+
+    public function testIsAssociativeArray()
+    {
+        // >0 for true; <0 for false.
+        $arrays = [
+            -1 => ['A', 'B', 'C'],
+            -2 => ['0', '1', '2'],
+            -3 => [0, 1, 2],
+            -4 => [],
+            1 => ['A' => 'A', 'B' => 'B', 'C' => 'C'],
+            2 => ['A', 'B' => 'B', 'C'],
+            3 => ['0', '1', 'Z' => '2'],
+            4 => [0, 1, 'Z' => 2],
+        ];
+
+        foreach ($arrays as $expected => $source) {
+            $this->assertSame($expected > 0, Helper::isAssociativeArray($source));
+        }
+    }
+
+    public function testIsNumericArray()
+    {
+        // >0 for true; <0 for false.
+        $arrays = [
+            1 => ['A', 'B', 'C'],
+            2 => ['0', '1', '2'],
+            3 => [0, 1, 2],
+            -1 => [],
+            -2 => ['A' => 'A', 'B' => 'B', 'C' => 'C'],
+            -3 => ['A', 'B' => 'B', 'C'],
+            -4 => ['0', '1', 'Z' => '2'],
+            -5 => [0, 1, 'Z' => 2],
+        ];
+
+        foreach ($arrays as $expected => $source) {
+            $this->assertSame(
+                $expected > 0,
+                Helper::isNumericArray($source),
+                'Source: ' . json_encode($source)
+            );
+        }
+    }
+
+    // TODO: parseResponse and responseFactory are the two big ones.
 }

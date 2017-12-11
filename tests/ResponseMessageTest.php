@@ -40,7 +40,10 @@ class ResponseMessageTest extends TestCase
         $this->accountingPayment = new ResponseMessage($accountingPayment);
 
         // No-match payments from the Accounting API v2.0.
-        $accountingPaymentsNoMatch = json_decode(file_get_contents(__DIR__ . '/data/accountingPaymentsNoMatch.json'), true);
+        $accountingPaymentsNoMatch = json_decode(
+            file_get_contents(__DIR__ . '/data/accountingPaymentsNoMatch.json'),
+            true
+        );
         $this->accountingPaymentsNoMatch = new ResponseMessage($accountingPaymentsNoMatch);
 
         // 404 from the Accounting API v2.0.
@@ -107,7 +110,7 @@ class ResponseMessageTest extends TestCase
         $this->assertSame($message->count(), 0);
         $this->assertSame(count($message), 0);
 
-        foreach($message as $key => $value) {
+        foreach ($message as $key => $value) {
             $this->fail('Iterator still loops over empty array');
         }
 
@@ -136,7 +139,7 @@ class ResponseMessageTest extends TestCase
         // over the resource collection.
 
         $found = 0;
-        foreach($message as $key => $item) {
+        foreach ($message as $key => $item) {
             if ($key === 0) {
                 $this->assertSame($item->name, 'Inbox');
                 $found++;
@@ -157,7 +160,7 @@ class ResponseMessageTest extends TestCase
         // Test looping over the fetched resource collection direwctly.
 
         $found = 0;
-        foreach($collection as $key => $item) {
+        foreach ($collection as $key => $item) {
             if ($key === 0) {
                 $this->assertSame($item->name, 'Inbox');
                 $found++;
@@ -193,7 +196,7 @@ class ResponseMessageTest extends TestCase
         $this->assertSame($resource->name, 'Inbox');
     }
 
-    // 
+    //
 
     /**
      * Properties of the root GB Payroll Employees collection response.
@@ -266,7 +269,7 @@ class ResponseMessageTest extends TestCase
         $this->assertEquals($pagination->itemCount, 1);
     }
 
-    // 
+    //
 
     /**
      * Properties of the root Accounting Payments collection response.
@@ -390,7 +393,7 @@ class ResponseMessageTest extends TestCase
         $this->assertEquals(count($resource), 1);
     }
 
-    // 
+    //
 
     /**
      * Properties of the root Accounting Payments collection response.
@@ -437,7 +440,7 @@ class ResponseMessageTest extends TestCase
         $this->assertEquals(count($resource), 1);
     }
 
-    // 
+    //
 
     /**
      * Properties of the root Accounting single Payment response.
