@@ -59,7 +59,7 @@ class Helper
 
             foreach ($otherFormats as $otherFormat) {
                 if (preg_match($otherFormat, $item)) {
-                    return Carbon::parse($item)->setTimezone('UTC');
+                    return Carbon::parse($item, 'UTC')->setTimezone('UTC');
                 }
             }
         }
