@@ -26,7 +26,7 @@ class HelperTest extends TestCase
             // Carbon.
             '2017-01-01T23:59:59+00:00' => Carbon::parse('2017-01-01 23:59:59', 'UTC'),
             // Datetime
-            '2017-09-24T23:00:00+00:00' => new \DateTime('2017-09-25T00:00:00'),
+            '2017-09-24T23:00:00+00:00' => new \DateTime('2017-09-24T23:00:00', new \DateTimeZone('UTC')),
             // Integer
             '2017-10-31T12:47:42+00:00' => 1509454062,
         ];
