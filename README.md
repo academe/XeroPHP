@@ -4,6 +4,27 @@
 [![Latest Unstable Version](https://poser.pugx.org/academe/xero-php/v/unstable)](https://packagist.org/packages/academe/xero-php)
 [![License](https://poser.pugx.org/academe/xero-php/license)](https://packagist.org/packages/academe/xero-php)
 
+Table of Contents
+=================
+
+   * [XeroPHP API OAuth Access](#xerophp-api-oauth-access)
+      * [Intro](#intro)
+      * [Areas to Complete (TODO)](#areas-to-complete-todo)
+      * [Quick Start](#quick-start)
+      * [The Response Message](#the-response-message)
+         * [Message Instantiation](#message-instantiation)
+         * [Response Collections](#response-collections)
+      * [Guzzle Exceptions](#guzzle-exceptions)
+      * [Catching Errors](#catching-errors)
+      * [API Response Structures](#api-response-structures)
+         * [A: Single metadata header; single resource](#a-single-metadata-header-single-resource)
+         * [B: Single metadata header; collection of resources](#b-single-metadata-header-collection-of-resources)
+         * [C: Single metadata header; collection of a single resource](#c-single-metadata-header-collection-of-a-single-resource)
+         * [D: Single metadata header; collection of resources](#d-single-metadata-header-collection-of-resources)
+         * [E: Array of resources](#e-array-of-resources)
+         * [F: Single resources](#f-single-resources)
+      * [Other Notes](#other-notes)
+
 XeroPHP API OAuth Access
 ========================
 
